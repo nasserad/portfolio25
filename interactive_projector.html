@@ -101,11 +101,29 @@
                 $projectorUserImg.css('fill', 'rgb(26,87,255)');
                 $projectorUserName.css('color', 'rgba(228, 228, 228, 1)');
 
-                // projector
+                // projector: recolor
                 $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.04)');
                 $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
                 $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
                 $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
+
+                // projector: resize
+                const svg = $projectorForeground.find('svg')[0];
+
+                svg.setAttribute('viewBox', `0 0 281 281`);
+                svg.setAttribute('preserveAspectRatio', 'none');
+
+                $projectorForeground.css({
+                'width': '400px',
+                'height': '400px',
+                'transform': 'scale(1)'
+                });
+
+                $(svg).attr({
+                'width': '400',
+                'height': '400',
+                'style': 'width: 400px; height: 400px;' 
+                });
 
                 //buttons
                 $projectorCloseBtn.show();
@@ -114,7 +132,7 @@
                 $projectorActionBtnDisabled.hide();
                 
                 //star
-                checkOverlap();
+                //checkOverlap();
             } 
             else {
                 $targetTitle.text('abra cada bra');
@@ -124,11 +142,29 @@
                 $projectorUserImg.css('fill', 'rgba(26,87,255, 0.3)');
                 $projectorUserName.css('color', 'rgba(228, 228, 228, 0.25)');
 
-                // projector
+                // projector: recolor
                 $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.02)');
                 $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
                 $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
                 $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
+
+                // projector: resize
+                const svg = $projectorForeground.find('svg')[0];
+
+                svg.setAttribute('viewBox', `0 0 281 281`);
+                svg.setAttribute('preserveAspectRatio', 'none');
+
+                $projectorForeground.css({
+                'width': '281px',
+                'height': '281px',
+                'transform': 'scale(1)'
+                });
+
+                $(svg).attr({
+                'width': '281',
+                'height': '281',
+                'style': 'width: 281px; height: 281px;' 
+                });
 
                 //buttons
                 $projectorCloseBtn.hide();
@@ -137,7 +173,7 @@
                 $projectorActionBtnDisabled.show();
                 
                 //star
-                checkOverlap();
+                //checkOverlap();
             }
         }
 
