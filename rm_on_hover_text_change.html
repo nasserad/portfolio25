@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <script>
+        //constants: class names
+        const rmWidgetClassName = "rmwidget";
+        const textV3WidgetClassName = "widget-text-v3";
+        const shapeWidgetClassName = "widget-shape";
+        const buttonWidgetClassName = "widget-button";
+        //constants: widget IDs
+        const targetTitleId = "67dd66c63a64f2281b928afb";
+        const targetTextId = "67d47a32802660506c48d088";
+        const targetProjectorBackgroundId = "67e9f5d805137a26916fce6f";
+        const targetProjectorForegroundId = "67e9f5d862ecc0be7cff9d44";
+        const targetProjectorUserImgId = "67e9f5d9c5a5ce602fac3f88";
+        const targetProjectorUserNameId = "67e9f5d928c042804157b29a";
+        const targetProjectorCloseBtnId = "67eacf150c89adeaeb487c02";
+        const targetProjectorCloseBtnDisabledId = "67eacd2f54be5d50b17f6a42";
+        const targetProjectorActionBtnId= "67eacf1511d353e4afae09d2";
+        const targetProjectorActionBtnDisabledId= "67eace502229b047344ff591";
+        const chosenAssetId = "67d47b040af04cc131e275e5"; //this needs more thinking (setter function?)
+
+        //obj refernces
+        const $targetTitle = $(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetTitleId}"] span`);
+        const $targetText = $(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetTextId}"] span`);
+
+        const $projectorBackground = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"]`);
+        const $projectorBackgroundFill = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"] path[mask]`);
+        const $projectorBackgroundOutline = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"] path[clip-path]`);
+        const $projectorForeground = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"]`);
+        const $projectorForegroundFill = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"] path[mask]`);
+        const $projectorForegroundOutline = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"] path[clip-path]`);
+        const $projectorUserImg = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorUserImgId}"] ellipse[mask]`);
+        const $projectorUserName = $(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetProjectorUserNameId}"] span`);
+        const $projectorCloseBtn = $(`div.${rmWidgetClassName}.${buttonWidgetClassName}[data-id="${targetProjectorCloseBtnId}"]`);
+        const $projectorCloseBtnDisabled = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorCloseBtnDisabledId}"]`);
+        const $projectorActionBtn = $(`div.${rmWidgetClassName}.${buttonWidgetClassName}[data-id="${targetProjectorActionBtnId}"]`);
+        const $projectorActionBtnDisabled = $(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorActionBtnDisabledId}"]`);
+        
+        const $chosenAsset = $(`div.${shapeWidgetClassName}[data-id="${chosenAssetId}"]`);
+        const originalSize = { 
+            width: parseInt($chosenAsset.css('width')), 
+            height: parseInt($chosenAsset.css('height')) 
+        };
+
+        //
+        //functions
+        //
+
+        function isOverlapping(element1, element2) {
+            const rect1 = element1[0].getBoundingClientRect();
+            const rect2 = element2[0].getBoundingClientRect();
+
+            return !(
+             rect1.right < rect2.left ||
+             rect1.left > rect2.right ||
+             rect1.bottom < rect2.top || 
+             rect1.top > rect2.bottom
+            );
+        }
+        
+        let isScaled = false;
+        function toggleScale() {
+            if (isScaled) {
+            $chosenAsset.css({ 
+                width: `${originalSize.width}px`, 
+                height: `${originalSize.height}px` 
+            });
+            } else {
+            $chosenAsset.css({ 
+                width: `${originalSize.width * 4}px`, 
+                height: `${originalSize.height * 4}px` 
+            });
+            }
+            isScaled = !isScaled;
+        }
+
+        let wasOverlapping = false;
+        //confusing name (make clear abt once, maybe callOnce)
+        function checkOverlap() {
+            const isOverlapping = isOverlapping($chosenAsset, $projectorForeground);
+
+            if (isOverlapping !== wasOverlapping) {
+            toggleScale();
+            //add calls (on overlap change) here
+            wasOverlapping = isOverlapping;
+            }
+        }
+        
+        function updateText() {
+            if (isOverlapping($chosenAsset, $projectorForeground)) {
+                $targetTitle.text('okay, this one was.. special');
+                $targetText.text('a cyan star is on top of me');
+                         
+                //username
+                $projectorUserImg.css('fill', 'rgb(26,87,255)');
+                $projectorUserName.css('color', 'rgba(228, 228, 228, 1)');
+
+                // projector
+                $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.04)');
+                $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
+                $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
+                $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
+
+                //buttons
+                $projectorCloseBtn.show();
+                $projectorActionBtn.show();
+                $projectorCloseBtnDisabled.hide();
+                $projectorActionBtnDisabled.hide();
+                
+                //star
+                checkOverlap();
+            } 
+            else {
+                $targetTitle.text('abra cada bra');
+                $targetText.text('moooooove something inside the super special magical projector pro plus R M skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.');
+
+                //username
+                $projectorUserImg.css('fill', 'rgba(26,87,255, 0.3)');
+                $projectorUserName.css('color', 'rgba(228, 228, 228, 0.25)');
+
+                // projector
+                $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.02)');
+                $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
+                $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
+                $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
+
+                //buttons
+                $projectorCloseBtn.hide();
+                $projectorActionBtn.hide();
+                $projectorCloseBtnDisabled.show();
+                $projectorActionBtnDisabled.show();
+                
+                //star
+                checkOverlap();
+            }
+        }
+
+        //listener
+        $(document).on('mousemove touchmove', function() {
+            updateText();
+        });
+        updateText();
+
+    </script>
+</body>
+</html></meta></html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <p id="nasser">hi</p>
+    <script>
+        let isEnglish = true;
+        let isDark = true;
+
+        const languageSliderGreenId = "67c1a2ed351358e64e652241";
+        const languageSliderActiveRightId = "67c1a2ed73fd5363fae0227e";
+        const languageSliderActiveLeftId = "67c1a2ed680edbdbe7f1ba00";
+
+        const colorModeSliderGreenId = "67c1a3d78345838698953ddd";
+        const colorModeSliderActiveRightId = "67c1a3d741cbb3cffcfc17f3";
+        const colorModeSliderActiveLeftId = "67c1a3d88345838698954287";
+
+        const elementClassName = "rmwidget";
+
+        const englishDarkGa = "670555c8246caad638380c68";
+        const englishDarkWho = "67055609f8007909722a7732";
+        const englishDarkEa = "6705560faf1d8529da2ec3af";
+        const englishDarkHrc = "6705561878777281645e1ffd";
+
+        const arabicDarkGa = "67c1c4a1a5df43c5c9076418";
+        const arabicDarkWho = "67c1c4a19f209508737fff76";
+        const arabicDarkEa = "67c1c4a10d4b94efe665f0be";
+        const arabicDarkHrc = "67c1c4a071656b85a956fca8";
+
+        const englishLightGa = "67c1c4acacac1cf6c0afa2dd";
+        const englishLightWho = "67c1c4ab541e60136ba65998";
+        const englishLightEa = "67c1c4abe574db6daca1383b";
+        const englishLightHrc = "67c1c4abacac1cf6c0afa2d9";
+
+        const arabicLightGa = "67c1c4b7f44caab75b5bd2c5";
+        const arabicLightWho = "67c1c4b6a8d552c9508df3d6";
+        const arabicLightEa = "67c1c4b6fd1b3034608a50a4";
+        const arabicLightHrc = "67c1c4b6f44caab75b5bd2bf";
+
+
+        function updateWidget() {
+            if(isEnglish && isDark) {
+                //to show
+                $(`div.${elementClassName}[data-id="${englishDarkGa}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishDarkWho}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishDarkEa}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishDarkHrc}"]`).show();
+
+                //to hide
+                $(`div.${elementClassName}[data-id="${arabicDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightHrc}"]`).hide();
+
+            } else if (!isEnglish && isDark) {
+                $(`div.${elementClassName}[data-id="${arabicDarkGa}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicDarkWho}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicDarkEa}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicDarkHrc}"]`).show();
+
+                //to hide
+                $(`div.${elementClassName}[data-id="${englishDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightHrc}"]`).hide();
+
+            } else if (isEnglish && !isDark) {
+                $(`div.${elementClassName}[data-id="${englishLightGa}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishLightWho}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishLightEa}"]`).show();
+                $(`div.${elementClassName}[data-id="${englishLightHrc}"]`).show();
+
+                //to hide
+                $(`div.${elementClassName}[data-id="${englishDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicLightHrc}"]`).hide();
+
+            } else if (!isEnglish && !isDark) {
+                $(`div.${elementClassName}[data-id="${arabicLightGa}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicLightWho}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicLightEa}"]`).show();
+                $(`div.${elementClassName}[data-id="${arabicLightHrc}"]`).show();
+
+                //to hide
+                $(`div.${elementClassName}[data-id="${englishDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${arabicDarkHrc}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightGa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightWho}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightEa}"]`).hide();
+                $(`div.${elementClassName}[data-id="${englishLightHrc}"]`).hide();
+            }
+        }
+
+        function setIsEnglish() {
+            isEnglish = !isEnglish;
+            updateWidget(); // Update display every time the state changes.
+        }
+        function setIsDark() {
+            isDark = !isDark;
+            updateWidget(); // Update display every time the state changes.
+        }
+
+        // Attach the click event handler.
+        //language
+        $(`div.common-button[data-id="${languageSliderGreenId}"], 
+           div.${elementClassName}[data-id="${languageSliderActiveRightId}"], 
+           div.${elementClassName}[data-id="${languageSliderActiveLeftId}"]`
+        ).click(setIsEnglish);
+
+        //color mode
+        $(`div.common-button[data-id="${colorModeSliderGreenId}"], 
+           div.${elementClassName}[data-id="${colorModeSliderActiveRightId}"], 
+           div.${elementClassName}[data-id="${colorModeSliderActiveLeftId}"]`
+        ).click(setIsDark);
+
+        // Initial call to set the widget state correctly on page load.
+        updateWidget();
+    </script>
+</body>
+</html></meta></html>
