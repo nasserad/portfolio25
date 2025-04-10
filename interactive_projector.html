@@ -4,356 +4,431 @@
 <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 </head>
 
 <body>
     <script>
-        //constants: class names
-        const rmWidgetClassName = "rmwidget";
-        const textV3WidgetClassName = "widget-text-v3";
-        const shapeWidgetClassName = "widget-shape";
-        const buttonWidgetClassName = "widget-button";
-        //constants: widget IDs
-        const targetTitleId = "67dd66c63a64f2281b928afb";
-        const targetTextId = "67d47a32802660506c48d088";
-        const targetProjectorBackgroundId = "67e9f5d805137a26916fce6f";
-        const targetProjectorForegroundId = "67e9f5d862ecc0be7cff9d44";
-        const targetProjectorHintTextId = "67e9f5d96855af5ad56d85e4";
-        const targetProjectorUserImgId = "67e9f5d9c5a5ce602fac3f88";
-        const targetProjectorUserNameId = "67e9f5d928c042804157b29a";
-        const targetProjectorCloseBtnId = "67eacf150c89adeaeb487c02";
-        const targetProjectorCloseBtnDisabledId = "67eacd2f54be5d50b17f6a42";
-        const targetProjectorActionBtnId = "67eacf1511d353e4afae09d2";
-        const targetProjectorActionBtnDisabledId = "67eace502229b047344ff591";
-        const chosenAssetId = "67d47b040af04cc131e275e5"; //this needs more thinking (setter function?)
 
-        //obj refernces
-        const targetTitleEl = document.querySelector(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetTitleId}"] span`);
-        const targetTextEl = document.querySelector(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetTextId}"] span`);
+        //[*] stuff left to work on:
+        // 1. creation of the actual design assets.
+        // 2. adding the creation of (the picture/slideshow/video assets to show/hide when design asset activated) to be included within the code.
+        // 3. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
+        
+        //{*} extra stuff:
+        // -  optimizing listeners.
+        // -  rethink factory + singleton pattern for mediatypes. overkill or keep it?
 
-        const projectorBackgroundEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"]`);
-        const projectorBackgroundFillEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"] path[mask]`);
-        const projectorBackgroundOutlineEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorBackgroundId}"] path[clip-path]`);
-        const projectorForegroundEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"]`);
-        const projectorForegroundFillEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"] path[mask]`);
-        const projectorForegroundOutlineEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorForegroundId}"] path[clip-path]`);
-        const projectorUserImgEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorUserImgId}"] ellipse[mask]`);
-        const projectorHintTextEl = document.querySelector(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetProjectorHintTextId}"] span`);
-        const projectorUserNameEl = document.querySelector(`div.${rmWidgetClassName}.${textV3WidgetClassName}[data-id="${targetProjectorUserNameId}"] span`);
-        const projectorCloseBtnEl = document.querySelector(`div.${rmWidgetClassName}.${buttonWidgetClassName}[data-id="${targetProjectorCloseBtnId}"]`);
-        const projectorCloseBtnDisabledEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorCloseBtnDisabledId}"]`);
-        const projectorActionBtnEl = document.querySelector(`div.${rmWidgetClassName}.${buttonWidgetClassName}[data-id="${targetProjectorActionBtnId}"]`);
-        const projectorActionBtnDisabledEl = document.querySelector(`div.${rmWidgetClassName}.${shapeWidgetClassName}[data-id="${targetProjectorActionBtnDisabledId}"]`);
-
-
-        const chosenAssetEl = document.querySelector(`div.${shapeWidgetClassName}[data-id="${chosenAssetId}"]`); //needs smarter logic
-        const originalSize = {
-            width: parseInt($chosenAsset.css('width')),
-            height: parseInt($chosenAsset.css('height'))
-        };
-
-        //
-        //functions
-        //
+        rmWidgetsClassNames = {
+            default: "rmwidget",
+            textV3: "widget-text-v3",
+            shape: "widget-shape",
+            button: "widget-button"
+        }
 
         function isOverlapping(element1, element2) {
-            const rect1 = element1[0].getBoundingClientRect();
-            const rect2 = element2[0].getBoundingClientRect();
+            const rect1 = element1.getBoundingClientRect();
+            const rect2 = element2.getBoundingClientRect();
 
             return !(
-                rect1.right < rect2.left ||
-                rect1.left > rect2.right ||
-                rect1.bottom < rect2.top ||
-                rect1.top > rect2.bottom
+                rect1.right < rect2.left ||    //rectONE is completely to the left of rectTWO
+                rect1.left > rect2.right ||    //rectONE is completely to the right of rectTWO
+                rect1.bottom < rect2.top ||    //rectONE is completely above rectTWO
+                rect1.top > rect2.bottom       //rectONE is completely below rectTWO
             );
         }
 
-        let isScaled = false;
-        function toggleScale() {
-            if (isScaled) {
-                $chosenAsset.css({
-                    width: `${originalSize.width}px`,
-                    height: `${originalSize.height}px`
-                });
-            } else {
-                $chosenAsset.css({
-                    width: `${originalSize.width * 4}px`,
-                    height: `${originalSize.height * 4}px`
-                });
-            }
-            isScaled = !isScaled;
-        }
-
-        let wasOverlapping = false;
-        //confusing name (make clear abt once, maybe callOnce)
         function checkOverlap() {
-            const isOverlapping = isOverlapping($chosenAsset, $projectorForeground);
+            const projector = new Projector();
+            const el = projector.elements;
 
-            if (isOverlapping !== wasOverlapping) {
-                toggleScale();
-                //add calls (on overlap change) here
-                wasOverlapping = isOverlapping;
+            const manager = new DesignAssetManager();
+            const activeAsset = manager.getCurrentTarget();
+
+            if (activeAsset && isOverlapping(activeAsset.assetEl, el.foreground)) {
+                activeAsset.activate();
+            } else {
+                activeAsset.deactivate();
             }
         }
 
-        function updateText() {
-            if (isOverlapping($chosenAsset, $projectorForeground)) {
-                $targetTitle.text('okay, this one was.. special');
-                $targetText.text('a cyan star is on top of me');
+        class Projector {
+            constructor() {
+                if (Projector.instance) return Projector.instance;
 
-                //username
-                $projectorUserImg.css('fill', 'rgb(26,87,255)');
-                $projectorUserName.css('color', 'rgba(228, 228, 228, 1)');
+                //constants: widget IDs
+                this.ids = {
+                    title: "67dd66c63a64f2281b928afb",
+                    text: "67d47a32802660506c48d088",
+                    projectorBackground: "67e9f5d805137a26916fce6f",
+                    projectorForeground: "67e9f5d862ecc0be7cff9d44",
+                    hintText: "67e9f5d96855af5ad56d85e4",
+                    userImg: "67e9f5d9c5a5ce602fac3f88",
+                    userName: "67e9f5d928c042804157b29a",
+                    closeBtn: "67eacf150c89adeaeb487c02",
+                    closeBtnDisabled: "67eacd2f54be5d50b17f6a42",
+                    actionBtn: "67eacf1511d353e4afae09d2",
+                    actionBtnDisabled: "67eace502229b047344ff591",
+                    chosenAsset: "67d47b040af04cc131e275e5"
+                };
 
-                // projector: recolor
-                $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.04)');
-                $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
-                $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
-                $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.2)');
+                // DOM references
+                this.elements = {
+                    title: this._queryText(this.ids.title),
+                    text: this._queryText(this.ids.text),
+                    hintText: this._queryText(this.ids.hintText),
+                    userName: this._queryText(this.ids.userName),
 
-                // projector: resize
-                const svg = $projectorForeground.find('svg')[0];
+                    background: this._queryShape(this.ids.projectorBackground),
+                    backgroundFill: this._queryShape(this.ids.projectorBackground, 'path[mask]'),
+                    backgroundOutline: this._queryShape(this.ids.projectorBackground, 'path[clip-path]'),
 
-                svg.setAttribute('viewBox', `0 0 281 281`);
-                svg.setAttribute('preserveAspectRatio', 'none');
+                    foreground: this._queryShape(this.ids.projectorForeground),
+                    foregroundFill: this._queryShape(this.ids.projectorForeground, 'path[mask]'),
+                    foregroundOutline: this._queryShape(this.ids.projectorForeground, 'path[clip-path]'),
 
-                $projectorForeground.css({
-                    'width': '400px',
-                    'height': '400px',
-                    'transform': 'scale(1)'
-                });
+                    userImg: this._queryShape(this.ids.userImg, 'ellipse[mask]'),
 
-                $(svg).attr({
-                    'width': '400',
-                    'height': '400',
-                    'style': 'width: 400px; height: 400px;'
-                });
+                    closeBtn: this._queryButton(this.ids.closeBtn),
+                    closeBtnDisabled: this._queryShape(this.ids.closeBtnDisabled),
 
-                //buttons
-                $projectorCloseBtn.show();
-                $projectorActionBtn.show();
-                $projectorCloseBtnDisabled.hide();
-                $projectorActionBtnDisabled.hide();
+                    actionBtn: this._queryButton(this.ids.actionBtn),
+                    actionBtnDisabled: this._queryShape(this.ids.actionBtnDisabled)
+                };
 
-                //star
-                //checkOverlap();
-            }
-            else {
-                $targetTitle.text('abra cada bra');
-                $targetText.text('moooooove something inside the super special magical projector pro plus R M skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.');
+                this.originX = 0;
+                this.originY = 0;
 
-                //username
-                $projectorUserImg.css('fill', 'rgba(26,87,255, 0.3)');
-                $projectorUserName.css('color', 'rgba(228, 228, 228, 0.25)');
-
-                // projector: recolor
-                $projectorBackgroundFill.css('fill', 'rgba(255,255,255, 0.02)');
-                $projectorBackgroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
-                $projectorForegroundFill.css('fill', 'rgb(34,34,34)');
-                $projectorForegroundOutline.css('stroke', 'rgba(255,255,255, 0.1)');
-
-                // projector: resize
-                const svg = $projectorForeground.find('svg')[0];
-
-                svg.setAttribute('viewBox', `0 0 281 281`);
-                svg.setAttribute('preserveAspectRatio', 'none');
-
-                $projectorForeground.css({
-                    'width': '281px',
-                    'height': '281px',
-                    'transform': 'scale(1)'
-                });
-
-                $(svg).attr({
-                    'width': '281',
-                    'height': '281',
-                    'style': 'width: 281px; height: 281px;'
-                });
-
-                //buttons
-                $projectorCloseBtn.hide();
-                $projectorActionBtn.hide();
-                $projectorCloseBtnDisabled.show();
-                $projectorActionBtnDisabled.show();
-
-                //star
-                //checkOverlap();
-            }
-        }
-
-        class MediaType {
-            constructor(parameters) {
-                
+                Projector.instance = this;
             }
 
-        }
-
-        class jhgMediaType {
-            //int projectorWidth
-            //int projectorHeight
-            //int textOffsetX
-            //int textOffsetY
-            constructor(name, projectorBgWidth, projectorBgHeight, textOffsetX, textOffsetY) {
-                this.name = name; //readability, though i could just subtitute it w a comment beside the obj declaration, but i think this is best, yes yes
-                this.projectorBgWidth = projectorBgWidth;
-                projectorFgWidth = projectorBgWidth - 9 * 2; //side margins
-                this.projectorBgHeight = projectorBgHeight;
-                projectorFgHeight = projectorBgHeight - 37 * 2; //top/bottom margins
-                this.textOffsetX = textOffsetX;
-                this.textOffsetY = textOffsetY;
+            //helpers
+            _queryText(id) {
+                return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.textV3}[data-id="${id}"] span`);
             }
 
-            activate() {
-                //TEXT: position
-                //position title
-                targetTitleEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position body
-                targetTextEl.style.transform = 'translate(50px, 100px)';///////////  
-
-                //PROJECTOR: resize & move
-                //hide drag here
-                projectorHintTextEl.style.display = 'none';
-
-                //resize bg
-                projectorBackgroundEl.style.width = `${projectorBgWidth}px`;
-                projectorBackgroundEl.style.height = `${projectorBgHeight}px`;
-                projectorBackgroundEl.style.transform = 'scale(1)';
-
-                const bgSvg = projectorBackgroundEl.querySelector('svg');
-                bgSvg.setAttribute(`viewBox', '0 0 ${projectorBgWidth} ${projectorBgHeight}`);
-                bgSvg.setAttribute('preserveAspectRatio', 'none');
-                bgSvg.setAttribute('width', projectorBgWidth);
-                bgSvg.setAttribute('height', projectorBgHeight);
-                bgSvg.style.width = `${projectorBgWidth}px`;
-                bgSvg.style.height = `${projectorBgHeight}px`;
-
-                //resize fg
-                projectorForegroundEl.style.width = `${projectorFgWidth}px`;
-                projectorForegroundEl.style.height = `${projectorFgHeight}px`;
-                projectorForegroundEl.style.transform = 'scale(1)';
-
-                const fgSvg = projectorForegroundEl.querySelector('svg');
-                fgSvg.setAttribute(`viewBox', '0 0 ${projectorFgWidth} ${projectorFgHeight}`);
-                fgSvg.setAttribute('preserveAspectRatio', 'none');
-                fgSvg.setAttribute('width', projectorFgWidth);
-                fgSvg.setAttribute('height', projectorFgHeight);
-                fgSvg.style.width = `${projectorFgWidth}px`;
-                fgSvg.style.height = `${projectorFgHeight}px`;
-
-                //position bg
-                projectorBackgroundEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position fg
-                projectorForegroundEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position userImg
-                projectorUserImgEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position userName
-                projectorUserNameEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position closeBtn
-                projectorCloseBtnEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position actionBtn
-                projectorActionBtnEl.style.transform = 'translate(50px, 100px)';///////////
-
-                //position actionBtnDisabled
-                projectorActionBtnDisabledEl.style.transform = 'translate(50px, 100px)';///////////
-
+            _queryShape(id, child = "") {
+                return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.shape}[data-id="${id}"] ${child}`);
             }
 
-            deactivate() {
-                //reset transform by overwritting to scale(1)
+            _queryButton(id) {
+                return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.button}[data-id="${id}"]`);
             }
-        }
 
-        function setProjector(status, isActionable) {
-            if (status) { //on
-                projectorBackgroundFillEl.style.fill = 'rgba(255,255,255, 0.04)';
-                projectorBackgroundOutlineEl.style.stroke = 'rgba(255,255,255, 0.2)';
-                projectorForegroundFillEl.style.fill = 'rgb(34,34,34)';
-                projectorForegroundOutlineEl.style.stroke = 'rgba(255,255,255, 0.2)';
+            //methods
+            setOrigin(x, y) {
+                this.originX = x;
+                this.originY = y;
+            }
 
-                projectorUserImgEl.style.fill = 'rgb(26,87,255)';
-                projectorUserNameEl.style.color = 'rgba(228, 228, 228, 1)';
+            hideElement(el, status) {
+                if (el) el.style.display = status ? "none" : "block";
+            }
 
-                projectorCloseBtnEl.style.display = 'block';
-                projectorCloseBtnDisabledEl.style.display = 'none';
+            applyTransform(el, offsetX = 0, offsetY = 0) {
+                if (!el) return;
+                const x = this.originX + offsetX;
+                const y = this.originY + offsetY;
+                el.style.transform = `translate(${x}px, ${y}px)`;
+                el.style.transition = "transform 0.4s ease";
+            }
 
-                if (isActionable) {
-                    projectorActionBtnEl.style.display = 'block';
-                    projectorActionBtnDisabledEl.style.display = 'none';
-                } else {
-                    projectorActionBtnEl.style.display = 'none';
-                    projectorActionBtnDisabledEl.style.display = 'block';
+            resizeSvgContainer(containerEl, width, height) {
+                if (!containerEl) return;
+                const svg = containerEl.querySelector("svg");
+                if (!svg) return;
+
+                const viewBox = `0 0 ${width} ${height}`;
+                svg.setAttribute("viewBox", viewBox);
+                svg.setAttribute("preserveAspectRatio", "none");
+                svg.setAttribute("width", width);
+                svg.setAttribute("height", height);
+                svg.style.width = `${width}px`;
+                svg.style.height = `${height}px`;
+
+                containerEl.style.width = `${width}px`;
+                containerEl.style.height = `${height}px`;
+                containerEl.style.transform = "scale(1)";
+                containerEl.style.transition = "width 0.4s ease, height 0.4s ease";
+            }
+
+            resetTransform(el) {
+                if (el) el.style.transform = "translate(0, 0)";
+            }
+
+            setState(state, isActionable) {
+                const el = this.elements;
+
+                if (state) {//is on
+                    el.backgroundFill.style.fill = 'rgba(255,255,255, 0.04)';
+                    el.backgroundOutline.style.stroke = 'rgba(255,255,255, 0.2)';
+                    el.foregroundFill.style.fill = 'rgb(34,34,34)';
+                    el.foregroundOutline.style.stroke = 'rgba(255,255,255, 0.2)';
+                    el.userImg.style.fill = 'rgb(26,87,255)';
+                    el.userName.style.color = 'rgba(228, 228, 228, 1)';
+
+                    this.hideElement(el.closeBtn, false);
+                    this.hideElement(el.closeBtnDisabled, true);
+
+                    if (isActionable) {
+                        this.hideElement(el.actionBtn, false);
+                        this.hideElement(el.actionBtnDisabled, true);
+                    } else {
+                        this.hideElement(el.actionBtn, true);
+                        this.hideElement(el.actionBtnDisabled, false);
+                    }
+                } else {//is off
+                    el.backgroundFill.style.fill = 'rgba(255,255,255, 0.02)';
+                    el.backgroundOutline.style.stroke = 'rgba(255,255,255, 0.1)';
+                    el.foregroundFill.style.fill = 'rgb(34,34,34)';
+                    el.foregroundOutline.style.stroke = 'rgba(255,255,255, 0.1)';
+                    el.userImg.style.fill = 'rgba(26,87,255, 0.3)';
+                    el.userName.style.color = 'rgba(228, 228, 228, 0.25)';
+
+                    this.hideElement(el.closeBtn, true);
+                    this.hideElement(el.closeBtnDisabled, false);
+                    this.hideElement(el.actionBtn, true);
+                    this.hideElement(el.actionBtnDisabled, false);
                 }
-            } else { //off
-                projectorBackgroundFillEl.style.fill = 'rgba(255,255,255, 0.02)';
-                projectorBackgroundOutlineEl.style.stroke = 'rgba(255,255,255, 0.1)';
-                projectorForegroundFillEl.style.fill = 'rgb(34,34,34)';
-                projectorForegroundOutlineEl.style.stroke = 'rgba(255,255,255, 0.1)';
-
-                projectorUserImgEl.style.fill = 'rgba(26,87,255, 0.3)';
-                projectorUserNameEl.style.color = 'rgba(228, 228, 228, 0.25)';
-
-                projectorCloseBtnEl.style.display = 'none';
-                projectorCloseBtnDisabledEl.style.display = 'block';
-                projectorActionBtnEl.style.display = 'none';
-                projectorActionBtnDisabledEl.style.display = 'block';
             }
         }
 
         class DesignAsset {
-            //int ID;
-            //string title;
-            //string text;
-            //string pictureDataId;
-            //bool isActionable;
-            //stringList tweakDataId;
-            //MediaType theMediaType;
-            constructor(id, title, text, pictureDataId, isActionable, tweakDataId, theMediaType) {
+            /**
+            * @param {number} id
+            * @param {string} title
+            * @param {string} text
+            * @param {string} pictureDataId
+            * @param {bool} isActionable
+            * @param {stringList} tweakDataId
+            * @param {MediaType} mediaType
+            */
+            constructor(id, title, text, pictureDataId, isActionable, tweakDataId, mediaType) {
                 this.id = id;
-                assetEl = document.querySelector(`div.${shapeWidgetClassName}[data-id="${id}"]`); //unused
                 this.title = title;
                 this.text = text;
                 this.pictureDataId = pictureDataId; //unused
                 this.isActionable = isActionable;
-                this.tweakDataId = tweakDataId; //must be LIST + unused
-                this.theMediaType = theMediaType; //unused
+                this.tweakDataId = tweakDataId; //unused
+                this.mediaType = mediaType;
+
+                this.assetEl = document.querySelector(`div.${rmWidgetsClassNames.shape}[data-id="${id}"]`);
+                this._bindEvents();
+            }
+
+            _bindEvents() {
+                if (!this.assetEl) return;
+
+                this.assetEl.addEventListener("mousedown", () => {
+                    const manager = new DesignAssetManager();
+                    manager.setCurrentTarget(this);
+                });
             }
 
             activate() {
-                targetTitleEl.textContent = this.title;
-                targetTextEl.textContent = this.text;
+                //get (or create) the projector obj
+                const projector = new Projector();
+                //alias (for readability)
+                const el = projector.elements;
 
-                setProjector(true, isActionable);
+                //switches the projector to appear on (visual effect)
+                projector.setState(true, this.isActionable);
+
+                //sets the projector size and positioning based on the mediaType (of the designAsset)
+                const media = MediaFactory(mediaType);
+                media.activate();
+
+                //sets the text based on the designAsset
+                el.title.textContent = this.title;
+                el.text.textContent = this.text;
             }
 
-            deactivate() {
+            deactivate() { //outdated
                 targetTitleEl.textContent = "abra cada bra";
                 targetTextEl.textContent = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
 
-                setProjector(false, isActionable);
+                const media = MediaFactory(mediaType);
+                media.deactivate();
+
+                const projector = new Projector();
+                projector.setState(false, false);
             }
         }
 
-        function getBasedOnId(id, thing) {
+        class DesignAssetManager {
+            constructor() {
+                if (DesignAssetManager.instance) return DesignAssetManager.instance;
+                this.currentTarget = null;
+                DesignAssetManager.instance = this;
+            }
 
+            setCurrentTarget(assetInstance) {
+                this.currentTarget = assetInstance;
+            }
+
+            getCurrentTarget() {
+                return this.currentTarget;
+            }
+
+            clearTarget() {
+                this.currentTarget = null;
+            }
         }
 
-        function getBasedOnMediaType(params) {
-
+        class MediaType {
+            activate() {
+                throw new Error("unimplemented method.");
+            }
+            deactivate() {
+                throw new Error("unimplemented method.");
+            }
         }
 
-        //listener
-        $(document).on('mousemove touchmove', function () {
-            updateText();
-        });
-        updateText();
+        //implemented media types (concrete)
+        class StoryMedia extends MediaType {
+            activate() {
+                const projector = new Projector();
+                const el = projector.elements;
 
+                projector.setOrigin(0, 0);
+
+                //TEXT: position
+                //position title
+                projector.applyTransform(el.title, 0, 0);
+
+                //position body
+                projector.applyTransform(el.text, 0, 0);
+
+                //PROJECTOR: resize 
+                projector.resizeSvgContainer(el.background, 195, 383);
+                projector.resizeSvgContainer(el.foreground, 177, 314);
+
+                //PROJECTOR: hide
+                projector.hideElement(el.hintText, true);
+
+                //PROJECTOR: move
+                //position bg
+                projector.applyTransform(el.background, 47, -13);
+
+                //position fg
+                projector.applyTransform(el.foreground, 47, -16);
+
+                //position userImg
+                projector.applyTransform(el.userImg, 47, -14);
+
+                //position userName
+                projector.applyTransform(el.userName, 47, -17);
+
+                //position closeBtn
+                projector.applyTransform(el.closeBtn, -55, -14.83);
+
+                //position actionBtn
+                projector.applyTransform(el.actionBtn, -55, 16.17);
+
+                //position actionBtnDisabled
+                projector.applyTransform(el.actionBtnDisabled, -55, 16.17);
+            }
+            deactivate() {
+                const projector = new Projector();
+                const el = projector.elements;
+
+                projector.resetTransform(el.title);
+                projector.resetTransform(el.text);
+                projector.resetTransform(el.background);
+                projector.resetTransform(el.foreground);
+                projector.resetTransform(el.userImg);
+                projector.resetTransform(el.userName);
+                projector.resetTransform(el.closeBtn);
+                projector.resetTransform(el.actionBtn);
+                projector.resetTransform(el.actionBtnDisabled);
+
+                projector.hideElement(el.hintText, false);
+            }
+        }
+
+        class PostMedia extends MediaType {
+            activate() {
+                //do nothing (its the default view)
+            }
+            deactivate() {
+                //do nothing (its the default view)
+            }
+        }
+
+        class VideoMedia extends MediaType {
+            activate() {
+                const projector = new Projector();
+                const el = projector.elements;
+
+                projector.setOrigin(0, 0);
+
+                //TEXT: position
+                projector.applyTransform(el.title, 62, 0);
+                projector.applyTransform(el.text, 62, 0);
+
+                //PROJECTOR: resize 
+                projector.resizeSvgContainer(el.background, 517, 355);
+                projector.resizeSvgContainer(el.foreground, 499, 281);
+
+                //PROJECTOR: hide
+                projector.hideElement(el.hintText, true);
+
+                //PROJECTOR: move
+                projector.applyTransform(el.background, -63, 0);
+                projector.applyTransform(el.foreground, -62.99, 0);
+                projector.applyTransform(el.userImg, -63.99, 0);
+                projector.applyTransform(el.userName, -63.99, 0);
+                projector.applyTransform(el.closeBtn, 156, 0);
+                projector.applyTransform(el.actionBtn, 156, 0);
+                projector.applyTransform(el.actionBtnDisabled, 156, 0);
+            }
+            deactivate() {
+                const projector = new Projector();
+                const el = projector.elements;
+
+                projector.resetTransform(el.title);
+                projector.resetTransform(el.text);
+                projector.resetTransform(el.background);
+                projector.resetTransform(el.foreground);
+                projector.resetTransform(el.userImg);
+                projector.resetTransform(el.userName);
+                projector.resetTransform(el.closeBtn);
+                projector.resetTransform(el.actionBtn);
+                projector.resetTransform(el.actionBtnDisabled);
+
+                projector.hideElement(el.hintText, false);
+            }
+        }
+
+        //utility map 4 singleton
+        const SingletonRegistry = new Map();
+
+        function getSingleton(ClassRef) {
+            if (!SingletonRegistry.has(ClassRef)) {
+                SingletonRegistry.set(ClassRef, new ClassRef());
+            }
+            return SingletonRegistry.get(ClassRef);
+        }
+
+        function MediaFactory(type) {
+            const registry = {
+                story: StoryMedia,
+                post: PostMedia,
+                video: VideoMedia
+            };
+
+            const ClassRef = registry[type];
+            if (!ClassRef) throw new Error(`Unknown media type: ${type}`);
+
+            return getSingleton(ClassRef);
+
+            //listener (optimize??)
+            $(document).on('mousemove touchmove', function () {
+                checkOverlap();
+            });
+            //initial call (upon page load)
+            checkOverlap();
+        }
     </script>
 </body>
 
