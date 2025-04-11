@@ -11,10 +11,10 @@
     <script>
 
         //[*] stuff left to work on:
-        // 1. creation of the actual design assets.
-        // 2. adding the creation of (the picture/slideshow/video assets to show/hide when design asset activated) to be included within the code.
+        // DONE: creation of the actual design assets. 
+        // DONE: adding the creation of (the picture/slideshow/video assets to show/hide when design asset activated) to be included within the code.
         // 3. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
-        
+
         //{*} extra stuff:
         // -  optimizing listeners.
         // -  rethink factory + singleton pattern for mediatypes. overkill or keep it?
@@ -50,6 +50,11 @@
             } else {
                 activeAsset.deactivate();
             }
+        }
+
+        //util functions
+        function hideElement(el, status) {
+            if (el) el.style.display = status ? "none" : "block";
         }
 
         class Projector {
@@ -121,10 +126,6 @@
                 this.originY = y;
             }
 
-            hideElement(el, status) {
-                if (el) el.style.display = status ? "none" : "block";
-            }
-
             applyTransform(el, offsetX = 0, offsetY = 0) {
                 if (!el) return;
                 const x = this.originX + offsetX;
@@ -167,15 +168,15 @@
                     el.userImg.style.fill = 'rgb(26,87,255)';
                     el.userName.style.color = 'rgba(228, 228, 228, 1)';
 
-                    this.hideElement(el.closeBtn, false);
-                    this.hideElement(el.closeBtnDisabled, true);
+                    hideElement(el.closeBtn, false);
+                    hideElement(el.closeBtnDisabled, true);
 
                     if (isActionable) {
-                        this.hideElement(el.actionBtn, false);
-                        this.hideElement(el.actionBtnDisabled, true);
+                        hideElement(el.actionBtn, false);
+                        hideElement(el.actionBtnDisabled, true);
                     } else {
-                        this.hideElement(el.actionBtn, true);
-                        this.hideElement(el.actionBtnDisabled, false);
+                        hideElement(el.actionBtn, true);
+                        hideElement(el.actionBtnDisabled, false);
                     }
                 } else {//is off
                     el.backgroundFill.style.fill = 'rgba(255,255,255, 0.02)';
@@ -185,10 +186,10 @@
                     el.userImg.style.fill = 'rgba(26,87,255, 0.3)';
                     el.userName.style.color = 'rgba(228, 228, 228, 0.25)';
 
-                    this.hideElement(el.closeBtn, true);
-                    this.hideElement(el.closeBtnDisabled, false);
-                    this.hideElement(el.actionBtn, true);
-                    this.hideElement(el.actionBtnDisabled, false);
+                    hideElement(el.closeBtn, true);
+                    hideElement(el.closeBtnDisabled, false);
+                    hideElement(el.actionBtn, true);
+                    hideElement(el.actionBtnDisabled, false);
                 }
             }
         }
@@ -213,7 +214,9 @@
                 this.mediaType = mediaType;
 
                 this.assetEl = document.querySelector(`div.${rmWidgetsClassNames.shape}[data-id="${id}"]`);
+                this.pictureEl = document.querySelector(`[data-id="${this.pictureDataId}"]`);
                 this._bindEvents();
+                this._hidePictureOnInit();
             }
 
             _bindEvents() {
@@ -223,6 +226,10 @@
                     const manager = new DesignAssetManager();
                     manager.setCurrentTarget(this);
                 });
+            }
+
+            _hidePictureOnInit() {
+                hideElement(this.pictureEl, true);
             }
 
             activate() {
@@ -235,23 +242,30 @@
                 projector.setState(true, this.isActionable);
 
                 //sets the projector size and positioning based on the mediaType (of the designAsset)
-                const media = MediaFactory(mediaType);
+                const media = MediaFactory(this.mediaType);
                 media.activate();
+
+                //fills in the projector with the design asset (visual effect)
+                hideElement(this.pictureEl, false);
 
                 //sets the text based on the designAsset
                 el.title.textContent = this.title;
                 el.text.textContent = this.text;
             }
 
-            deactivate() { //outdated
-                targetTitleEl.textContent = "abra cada bra";
-                targetTextEl.textContent = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
+            deactivate() {
+                const projector = new Projector();
+                const el = projector.elements;
+
+                projector.setState(false, false);
 
                 const media = MediaFactory(mediaType);
                 media.deactivate();
 
-                const projector = new Projector();
-                projector.setState(false, false);
+                hideElement(this.pictureEl, true);
+
+                el.title.textContent = "abra cada bra";
+                el.text.textContent = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
             }
         }
 
@@ -421,14 +435,57 @@
             if (!ClassRef) throw new Error(`Unknown media type: ${type}`);
 
             return getSingleton(ClassRef);
-
-            //listener (optimize??)
-            $(document).on('mousemove touchmove', function () {
-                checkOverlap();
-            });
-            //initial call (upon page load)
-            checkOverlap();
         }
+
+        //actual creation of design assets
+        function createDesignAssetFromData(data) {
+            return new DesignAsset(
+                data.id,
+                data.title,
+                data.text,
+                data.pictureDataId,
+                data.isActionable,
+                data.tweakDataId || [],
+                data.mediaType
+            );
+        }
+
+        const rawData = [
+            {
+                id: "",
+                title: "Announcing HTU CC",
+                text: "So, in here announced the Al-Hussein Technical University Coding Competition through a super amazing really cool post. It was amazing and I loved it of course becasue I designed it, I know amazing right?",
+                pictureDataId: "",
+                isActionable: true,
+                tweakDataId: ["tw1", "tw2"],
+                mediaType: "post"
+            },
+            {
+                id: "",
+                title: "crazy random stuff",
+                text: "I ran out of brain rot so ur just gunna have tpo do with this shishishsis for now its my version of lorem ipsum, way better right? right? i love ketchup, its just so good. also i think im growing an armenian shawerma addiction.",
+                pictureDataId: "",
+                isActionable: false,
+                mediaType: "story"
+            },
+            {
+                id: "",
+                title: "okay a slideshow this time",
+                text: "i just need to change this text really wuick. yknow lorem ipsum would probably be faster but i need changing text each time to fully assess my design and prototype it. excellent usability testing process uhuh uhuh.",
+                pictureDataId: "",
+                isActionable: false,
+                mediaType: "slideshow"
+            }
+        ];
+
+        const designAssets = rawData.map(createDesignAssetFromData);
+
+        //listener (optimize??)
+        $(document).on('mousemove touchmove', function () {
+            checkOverlap();
+        });
+        //initial call (upon page load)
+        checkOverlap();
     </script>
 </body>
 
