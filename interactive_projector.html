@@ -212,8 +212,8 @@
                 this.tweakDataId = tweakDataId; //unused
                 this.mediaType = mediaType;
 
-                this.assetEl = document.querySelector(`div.${rmWidgetsClassNames.shape}[data-id="${id}"]`);
-                this.pictureEl = document.querySelector(`[data-id="${this.pictureDataId}"]`);
+                this.assetEl = document.querySelector(`div[data-id="${id}"]`);
+                this.pictureEl = document.querySelector(`div[data-id="${this.pictureDataId}"]`);
                 this._bindEvents();
                 this._hidePictureOnInit();
             }
