@@ -234,39 +234,54 @@
             }
 
             activate() {
+                console.log(`ACTIVATING ${this.id} attempting to get projector singleton`);
                 //get (or create) the projector obj
                 const projector = new Projector();
+                console.log(`ACTIVATING ${this.id} projector successfully created, moving to create el alias`);
                 //alias (for readability)
                 const el = projector.elements;
+                console.log(`ACTIVATING ${this.id} alias successfully created, moving to call setState`);
 
                 //switches the projector to appear on (visual effect)
                 projector.setState(true, this.isActionable);
-
+                console.log(`ACTIVATING ${this.id} settedState, moving to call mediafactory`);
                 //sets the projector size and positioning based on the mediaType (of the designAsset)
                 const media = MediaFactory(this.mediaType);
+                console.log(`ACTIVATING ${this.id} called mediafactory, moving to call activate`);
                 media.activate();
+                console.log(`ACTIVATING ${this.id} called activate, moving to call hideElement`);
 
                 //fills in the projector with the design asset (visual effect)
                 hideElement(this.pictureEl, false);
+                console.log(`ACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
                 //sets the text based on the designAsset
                 el.title.textContent = this.title;
                 el.text.textContent = this.text;
+                console.log(`ACTIVATING ${this.id} changed text and titles successfully, returning.`);
             }
 
             deactivate() {
+                console.log(`DEACTIVATING ${this.id} attempting to get projector singleton`);
                 const projector = new Projector();
+                console.log(`DEACTIVATING ${this.id} projector successfully created, moving to create el alias`);
                 const el = projector.elements;
 
+                console.log(`DEACTIVATING ${this.id} alias successfully created, moving to call setState`);
                 projector.setState(false, false);
+                console.log(`DEACTIVATING ${this.id} settedState, moving to call mediafactory`);
 
                 const media = MediaFactory(this.mediaType);
+                console.log(`DEACTIVATING ${this.id} called mediafactory, moving to call deactivate`);
                 media.deactivate();
+                console.log(`DEACTIVATING ${this.id} called deactivate, moving to call hideElement`);
 
                 hideElement(this.pictureEl, true);
+                console.log(`DEACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
                 el.title.textContent = "abra cada bra";
                 el.text.textContent = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
+                console.log(`DEACTIVATING ${this.id} changed text and titles successfully, returning.`);
             }
         }
 
@@ -319,7 +334,7 @@
                 projector.resizeSvgContainer(el.foreground, 177, 314);
 
                 //PROJECTOR: hide
-                projector.hideElement(el.hintText, true);
+                hideElement(el.hintText, true);
 
                 //PROJECTOR: move
                 //position bg
@@ -357,7 +372,7 @@
                 projector.resetTransform(el.actionBtn);
                 projector.resetTransform(el.actionBtnDisabled);
 
-                projector.hideElement(el.hintText, false);
+                hideElement(el.hintText, false);
             }
         }
 
@@ -386,7 +401,7 @@
                 projector.resizeSvgContainer(el.foreground, 499, 281);
 
                 //PROJECTOR: hide
-                projector.hideElement(el.hintText, true);
+                hideElement(el.hintText, true);
 
                 //PROJECTOR: move
                 projector.applyTransform(el.background, -63, 0);
@@ -411,7 +426,7 @@
                 projector.resetTransform(el.actionBtn);
                 projector.resetTransform(el.actionBtnDisabled);
 
-                projector.hideElement(el.hintText, false);
+                hideElement(el.hintText, false);
             }
         }
 
