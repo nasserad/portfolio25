@@ -61,6 +61,8 @@
             constructor() {
                 if (Projector.instance) return Projector.instance;
 
+                this.rmWidgetsClassNames = rmWidgetsClassNames;
+
                 //constants: widget IDs
                 this.ids = {
                     title: "67dd66c63a64f2281b928afb",
@@ -200,7 +202,7 @@
             * @param {string} text
             * @param {string} pictureDataId
             * @param {bool} isActionable
-            * @param {stringList} tweakDataId
+            * @param {string[]} tweakDataId
             * @param {MediaType} mediaType
             */
             constructor(id, title, text, pictureDataId, isActionable, tweakDataId, mediaType) {
@@ -258,7 +260,7 @@
 
                 projector.setState(false, false);
 
-                const media = MediaFactory(mediaType);
+                const media = MediaFactory(this.mediaType);
                 media.deactivate();
 
                 hideElement(this.pictureEl, true);
@@ -451,29 +453,29 @@
 
         const rawData = [
             {
-                id: "",
+                id: "67d47af15a2bcb42018765bb", //purple
                 title: "Announcing HTU CC",
                 text: "So, in here announced the Al-Hussein Technical University Coding Competition through a super amazing really cool post. It was amazing and I loved it of course becasue I designed it, I know amazing right?",
-                pictureDataId: "",
+                pictureDataId: "67f95cc570965b325e806672",
                 isActionable: true,
                 tweakDataId: ["tw1", "tw2"],
                 mediaType: "post"
             },
             {
-                id: "",
+                id: "67d47b040af04cc131e275e5", //cyan
                 title: "crazy random stuff",
                 text: "I ran out of brain rot so ur just gunna have tpo do with this shishishsis for now its my version of lorem ipsum, way better right? right? i love ketchup, its just so good. also i think im growing an armenian shawerma addiction.",
-                pictureDataId: "",
+                pictureDataId: "67f95ceca23604ff63b6c116",
                 isActionable: false,
                 mediaType: "story"
             },
             {
-                id: "",
+                id: "67f95cac00fee003fa29b2f8", //pink
                 title: "okay a slideshow this time",
                 text: "i just need to change this text really wuick. yknow lorem ipsum would probably be faster but i need changing text each time to fully assess my design and prototype it. excellent usability testing process uhuh uhuh.",
-                pictureDataId: "",
+                pictureDataId: "67f95d08231d4a07807e3c22",
                 isActionable: false,
-                mediaType: "slideshow"
+                mediaType: "video"
             }
         ];
 
