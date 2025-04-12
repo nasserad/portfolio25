@@ -39,17 +39,24 @@
             );
         }
 
-        function checkOverlap() {
+        let wasOverlapping = false;
+
+        function callOnce() {
             const projector = new Projector();
             const el = projector.elements;
 
             const manager = new DesignAssetManager();
             const activeAsset = manager.getCurrentTarget();
 
-            if (activeAsset && isOverlapping(activeAsset.assetEl, el.foreground)) {
-                activeAsset.activate();
-            } else {
-                activeAsset.deactivate();
+            const isCurrentlyOverlapping = activeAsset && isOverlapping(activeAsset.assetEl, el.foreground);
+
+            if (isCurrentlyOverlapping !== wasOverlapping) {
+                if (isCurrentlyOverlapping) {
+                    activeAsset.activate();
+                } else {
+                    activeAsset.deactivate();
+                }
+                wasOverlapping = isCurrentlyOverlapping;
             }
         }
 
@@ -499,10 +506,10 @@
 
         //listener (optimize??)
         $(document).on('mousemove touchmove', function () {
-            checkOverlap();
+            callOnce();
         });
         //initial call (upon page load)
-        checkOverlap();
+        callOnce();
     </script>
 </body>
 
