@@ -53,7 +53,7 @@
             if (isCurrentlyOverlapping !== wasOverlapping) {
                 if (isCurrentlyOverlapping) {
                     activeAsset.activate();
-                } else if(activeAsset) {
+                } else if (activeAsset) {
                     activeAsset.deactivate();
                 }
                 wasOverlapping = isCurrentlyOverlapping;
@@ -129,6 +129,24 @@
                 return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.button}[data-id="${id}"]`);
             }
 
+            _generateNewD(width, height, radius) {
+                const r = radius;
+                const w = width;
+                const h = height;
+
+                return `
+                M${r} 0
+                A${r} ${r} 0 0 0 0 ${r}
+                L0 ${h - r}
+                A${r} ${r} 0 0 0 ${r} ${h}
+                L${w - r} ${h}
+                A${r} ${r} 0 0 0 ${w} ${h - r}
+                L${w} ${r}
+                A${r} ${r} 0 0 0 ${w - r} 0
+                Z
+            `.replace(/\s+/g, ' ').trim();
+            }
+
             //methods
             setOrigin(x, y) {
                 this.originX = x;
@@ -143,7 +161,7 @@
                 el.style.transition = "transform 0.4s ease";
             }
 
-            resizeSvgContainer(containerEl, width, height) {
+            resizeSvgContainer(containerEl, width, height, radius) {
                 if (!containerEl) return;
                 const svg = containerEl.querySelector("svg");
                 if (!svg) return;
@@ -161,7 +179,7 @@
                 containerEl.style.transform = "scale(1)";
                 containerEl.style.transition = "width 0.4s ease, height 0.4s ease";
 
-                const newD = ``;
+                const newD = this._generateNewD(width, height, radius);
 
                 const maskPath = svg.querySelector("defs mask path");
                 if (maskPath) maskPath.setAttribute("d", newD);
@@ -181,7 +199,7 @@
             }
 
             setText(textEl, newText) {
-                if(!textEl) return;
+                if (!textEl) return;
                 const span = textEl.querySelector("span");
                 if (!span) return;
 
@@ -364,8 +382,8 @@
                 projector.applyTransform(el.text, 0, 0);
 
                 //PROJECTOR: resize 
-                projector.resizeSvgContainer(el.background, 195, 383);
-                projector.resizeSvgContainer(el.foreground, 177, 314);
+                projector.resizeSvgContainer(el.background, 195, 383, 15);
+                projector.resizeSvgContainer(el.foreground, 177, 314, 15);
 
                 //PROJECTOR: hide
                 hideElement(el.hintText, true);
@@ -406,6 +424,9 @@
                 projector.resetTransform(el.actionBtn);
                 projector.resetTransform(el.actionBtnDisabled);
 
+                projector.resizeSvgContainer(el.background, 298, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 281, 281, 15);  
+
                 hideElement(el.hintText, false);
             }
         }
@@ -431,8 +452,8 @@
                 projector.applyTransform(el.text, 62, 0);
 
                 //PROJECTOR: resize 
-                projector.resizeSvgContainer(el.background, 517, 355);
-                projector.resizeSvgContainer(el.foreground, 499, 281);
+                projector.resizeSvgContainer(el.background, 517, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 499, 281, 15);
 
                 //PROJECTOR: hide
                 hideElement(el.hintText, true);
@@ -459,6 +480,9 @@
                 projector.resetTransform(el.closeBtn);
                 projector.resetTransform(el.actionBtn);
                 projector.resetTransform(el.actionBtnDisabled);
+
+                projector.resizeSvgContainer(el.background, 298, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
                 hideElement(el.hintText, false);
             }
