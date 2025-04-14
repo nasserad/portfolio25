@@ -53,7 +53,7 @@
             if (isCurrentlyOverlapping !== wasOverlapping) {
                 if (isCurrentlyOverlapping) {
                     activeAsset.activate();
-                } else {
+                } else if(activeAsset) {
                     activeAsset.deactivate();
                 }
                 wasOverlapping = isCurrentlyOverlapping;
@@ -118,7 +118,7 @@
 
             //helpers
             _queryText(id) {
-                return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.textV3}[data-id="${id}"] span`);
+                return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.textV3}[data-id="${id}"]`);
             }
 
             _queryShape(id, child = "") {
@@ -166,8 +166,18 @@
                 if (el) el.style.transform = "translate(0, 0)";
             }
 
+            setText(textEl, newText) {
+                if(!textEl) return;
+                const span = textEl.querySelector("span");
+                if (!span) return;
+
+                span.textContent = newText;
+            }
+
             setState(state, isActionable) {
                 const el = this.elements;
+                const userNameSpan = el.userName.querySelector("span");
+                if (!userNameSpan) return;
 
                 if (state) {//is on
                     el.backgroundFill.style.fill = 'rgba(255,255,255, 0.04)';
@@ -175,7 +185,7 @@
                     el.foregroundFill.style.fill = 'rgb(34,34,34)';
                     el.foregroundOutline.style.stroke = 'rgba(255,255,255, 0.2)';
                     el.userImg.style.fill = 'rgb(26,87,255)';
-                    el.userName.style.color = 'rgba(228, 228, 228, 1)';
+                    userNameSpan.style.color = 'rgba(228, 228, 228, 1)';
 
                     hideElement(el.closeBtn, false);
                     hideElement(el.closeBtnDisabled, true);
@@ -193,7 +203,7 @@
                     el.foregroundFill.style.fill = 'rgb(34,34,34)';
                     el.foregroundOutline.style.stroke = 'rgba(255,255,255, 0.1)';
                     el.userImg.style.fill = 'rgba(26,87,255, 0.3)';
-                    el.userName.style.color = 'rgba(228, 228, 228, 0.25)';
+                    userNameSpan.style.color = 'rgba(228, 228, 228, 0.25)';
 
                     hideElement(el.closeBtn, true);
                     hideElement(el.closeBtnDisabled, false);
@@ -264,8 +274,8 @@
                 console.log(`ACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
                 //sets the text based on the designAsset
-                el.title.textContent = this.title;
-                el.text.textContent = this.text;
+                projector.setText(el.title, this.title);
+                projector.setText(el.text, this.text);
                 console.log(`ACTIVATING ${this.id} changed text and titles successfully, returning.`);
             }
 
@@ -287,8 +297,10 @@
                 hideElement(this.pictureEl, true);
                 console.log(`DEACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
-                el.title.textContent = "abra cada bra";
-                el.text.textContent = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
+                const defaultTitle = "abra cada bra";
+                const defaultText = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
+                projector.setText(el.title, defaultTitle);
+                projector.setText(el.text, defaultText);
                 console.log(`DEACTIVATING ${this.id} changed text and titles successfully, returning.`);
             }
         }
