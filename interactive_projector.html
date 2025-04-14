@@ -81,9 +81,9 @@
                     userImg: "67e9f5d9c5a5ce602fac3f88",
                     userName: "67e9f5d928c042804157b29a",
                     closeBtn: "67eacf150c89adeaeb487c02",
-                    closeBtnDisabled: "67eacd2f54be5d50b17f6a42",
+                    //closeBtnDisabled: "67eacd2f54be5d50b17f6a42",
                     actionBtn: "67eacf1511d353e4afae09d2",
-                    actionBtnDisabled: "67eace502229b047344ff591"
+                    //actionBtnDisabled: "67eace502229b047344ff591"
                 };
 
                 // DOM references
@@ -104,10 +104,10 @@
                     userImg: this._queryShape(this.ids.userImg, 'ellipse[mask]'),
 
                     closeBtn: this._queryButton(this.ids.closeBtn),
-                    closeBtnDisabled: this._queryShape(this.ids.closeBtnDisabled),
+                    //closeBtnDisabled: this._queryShape(this.ids.closeBtnDisabled),
 
                     actionBtn: this._queryButton(this.ids.actionBtn),
-                    actionBtnDisabled: this._queryShape(this.ids.actionBtnDisabled)
+                    //actionBtnDisabled: this._queryShape(this.ids.actionBtnDisabled)
                 };
 
                 this.originX = 0;
@@ -206,7 +206,20 @@
                 span.textContent = newText;
             }
 
-            setState(state, isActionable) {
+            setButtonState(btnEl, state) {
+                if (!btnEl) return;
+                if (state) { //enabled
+                    btnEl.style.opacity = '100%';
+                    btnEl.style.pointerEvents = 'auto';
+                    btnEl.style.cursor = 'pointer';
+                } else { //disabled
+                    btnEl.style.opacity = '40%';
+                    btnEl.style.pointerEvents = 'none';
+                    btnEl.style.cursor = 'default';
+                }
+            }
+
+            setProjectorState(state, isActionable) {
                 const el = this.elements;
                 const userNameSpan = el.userName.querySelector("span");
                 if (!userNameSpan) return;
@@ -219,16 +232,9 @@
                     el.userImg.style.fill = 'rgb(26,87,255)';
                     userNameSpan.style.color = 'rgba(228, 228, 228, 1)';
 
-                    hideElement(el.closeBtn, false);
-                    hideElement(el.closeBtnDisabled, true);
+                    this.setButtonState(el.actionBtn, isActionable);
+                    this.setButtonState(el.closeBtn, true);
 
-                    if (isActionable) {
-                        hideElement(el.actionBtn, false);
-                        hideElement(el.actionBtnDisabled, true);
-                    } else {
-                        hideElement(el.actionBtn, true);
-                        hideElement(el.actionBtnDisabled, false);
-                    }
                 } else {//is off
                     el.backgroundFill.style.fill = 'rgba(255,255,255, 0.02)';
                     el.backgroundOutline.style.stroke = 'rgba(255,255,255, 0.1)';
@@ -237,10 +243,8 @@
                     el.userImg.style.fill = 'rgba(26,87,255, 0.3)';
                     userNameSpan.style.color = 'rgba(228, 228, 228, 0.25)';
 
-                    hideElement(el.closeBtn, true);
-                    hideElement(el.closeBtnDisabled, false);
-                    hideElement(el.actionBtn, true);
-                    hideElement(el.actionBtnDisabled, false);
+                    this.setButtonState(el.actionBtn, false);
+                    this.setButtonState(el.closeBtn, false);
                 }
             }
         }
@@ -293,7 +297,7 @@
                 console.log(`ACTIVATING ${this.id} alias successfully created, moving to call setState`);
 
                 //switches the projector to appear on (visual effect)
-                projector.setState(true, this.isActionable);
+                projector.setProjectorState(true, this.isActionable);
                 console.log(`ACTIVATING ${this.id} settedState, moving to call mediafactory`);
                 //sets the projector size and positioning based on the mediaType (of the designAsset)
                 const media = MediaFactory(this.mediaType);
@@ -318,7 +322,7 @@
                 const el = projector.elements;
 
                 console.log(`DEACTIVATING ${this.id} alias successfully created, moving to call setState`);
-                projector.setState(false, false);
+                projector.setProjectorState(false, false);
                 console.log(`DEACTIVATING ${this.id} settedState, moving to call mediafactory`);
 
                 const media = MediaFactory(this.mediaType);
@@ -408,7 +412,7 @@
                 projector.applyTransform(el.actionBtn, -55, 16.17);
 
                 //position actionBtnDisabled
-                projector.applyTransform(el.actionBtnDisabled, -55, 16.17);
+                //projector.applyTransform(el.actionBtnDisabled, -55, 16.17);
             }
             deactivate() {
                 const projector = new Projector();
@@ -422,7 +426,7 @@
                 projector.resetTransform(el.userName);
                 projector.resetTransform(el.closeBtn);
                 projector.resetTransform(el.actionBtn);
-                projector.resetTransform(el.actionBtnDisabled);
+                //projector.resetTransform(el.actionBtnDisabled);
 
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);  
@@ -465,7 +469,7 @@
                 projector.applyTransform(el.userName, -63.99, 0);
                 projector.applyTransform(el.closeBtn, 156, 0);
                 projector.applyTransform(el.actionBtn, 156, 0);
-                projector.applyTransform(el.actionBtnDisabled, 156, 0);
+                //projector.applyTransform(el.actionBtnDisabled, 156, 0);
             }
             deactivate() {
                 const projector = new Projector();
@@ -479,7 +483,7 @@
                 projector.resetTransform(el.userName);
                 projector.resetTransform(el.closeBtn);
                 projector.resetTransform(el.actionBtn);
-                projector.resetTransform(el.actionBtnDisabled);
+                //projector.resetTransform(el.actionBtnDisabled);
 
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);
