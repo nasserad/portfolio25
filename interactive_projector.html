@@ -62,7 +62,18 @@
 
         //util functions
         function hideElement(el, status) {
-            if (el) el.style.display = status ? "none" : "block";
+            if (!el) return;
+            el.style.transition = "transform 1.0s ease";
+            el.style.display = status ? "none" : "block";
+        }
+
+        function applyTransition(el, propertiesList, duration = "0.6s", easing = "ease") {
+            if (!el) return;
+
+            const bananaList = Array.isArray(propertiesList) ? propertiesList : [propertiesList];
+            const transitionString = bananaList.map(banana => `${banana} ${duration} ${easing}`).join(", ");
+
+            el.style.transition = transitionString;
         }
 
         class Projector {
@@ -158,7 +169,7 @@
                 const x = this.originX + offsetX;
                 const y = this.originY + offsetY;
                 el.style.transform = `translate(${x}px, ${y}px)`;
-                el.style.transition = "transform 0.4s ease";
+                applyTransition(el, "transform");
             }
 
             resizeSvgContainer(containerEl, width, height, radius) {
@@ -177,7 +188,7 @@
                 containerEl.style.width = `${width}px`;
                 containerEl.style.height = `${height}px`;
                 containerEl.style.transform = "scale(1)";
-                containerEl.style.transition = "width 0.4s ease, height 0.4s ease";
+                applyTransition(containerEl, ["width", "height"]);
 
                 const newD = this._generateNewD(width, height, radius);
 
@@ -195,7 +206,9 @@
             }
 
             resetTransform(el) {
-                if (el) el.style.transform = "translate(0, 0)";
+                if (!el) return;
+                applyTransition(el, "transform"); 
+                el.style.transform = "translate(0, 0)";
             }
 
             setText(textEl, newText) {
@@ -206,7 +219,7 @@
                 span.textContent = newText;
             }
 
-            setButtonState(btnEl, state) {
+            _setButtonState(btnEl, state) {
                 if (!btnEl) return;
                 if (state) { //enabled
                     btnEl.style.opacity = '100%';
@@ -232,8 +245,8 @@
                     el.userImg.style.fill = 'rgb(26,87,255)';
                     userNameSpan.style.color = 'rgba(228, 228, 228, 1)';
 
-                    this.setButtonState(el.actionBtn, isActionable);
-                    this.setButtonState(el.closeBtn, true);
+                    this._setButtonState(el.actionBtn, isActionable);
+                    this._setButtonState(el.closeBtn, true);
 
                 } else {//is off
                     el.backgroundFill.style.fill = 'rgba(255,255,255, 0.02)';
@@ -243,8 +256,8 @@
                     el.userImg.style.fill = 'rgba(26,87,255, 0.3)';
                     userNameSpan.style.color = 'rgba(228, 228, 228, 0.25)';
 
-                    this.setButtonState(el.actionBtn, false);
-                    this.setButtonState(el.closeBtn, false);
+                    this._setButtonState(el.actionBtn, false);
+                    this._setButtonState(el.closeBtn, false);
                 }
             }
         }
@@ -429,7 +442,7 @@
                 //projector.resetTransform(el.actionBtnDisabled);
 
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
-                projector.resizeSvgContainer(el.foreground, 281, 281, 15);  
+                projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
                 hideElement(el.hintText, false);
             }
