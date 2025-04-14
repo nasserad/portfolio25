@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <script>
+        function generateRoundedRectPath(width, height, radius = 15) {
+            const r = radius;
+            const w = width;
+            const h = height;
+
+            return `
+                M${r} 0
+                A${r} ${r} 0 0 0 0 ${r}
+                L0 ${h - r}
+                A${r} ${r} 0 0 0 ${r} ${h}
+                L${w - r} ${h}
+                A${r} ${r} 0 0 0 ${w} ${h - r}
+                L${w} ${r}
+                A${r} ${r} 0 0 0 ${w - r} 0
+                Z
+            `.replace(/\s+/g, ' ').trim();
+        }
+
+        console.log(`Input: 281, 281, 15. Output: ${generateRoundedRectPath(281, 281, 15)}`);
+        console.log(`Input: 177, 314, 15. Output: ${generateRoundedRectPath(177, 314, 15)}`);
+        console.log(`Input: 499, 281, 15. Output: ${generateRoundedRectPath(499, 281, 15)}`);
+        console.log(`Input: 499, 281, 30. Output: ${generateRoundedRectPath(499, 281, 30)}`);
+    </script>
+</body>
+
+</html>
+</meta>
+
+</html>
