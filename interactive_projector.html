@@ -5,6 +5,13 @@
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio</title>
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <script type="module">
+        import { animate } from "https://cdn.jsdelivr.net/npm/motion@10.16.3/+esm";
+        import { interpolate } from "https://cdn.jsdelivr.net/npm/flubber@0.4.2/+esm";
+
+        window.animate = animate;
+        window.interpolate = interpolate;
+    </script>
 </head>
 
 <body>
@@ -172,11 +179,7 @@
                 applyTransition(el, "transform");
             }
 
-            resizeSvgContainer(containerEl, width, height, radius) {
-                if (!containerEl) return;
-                const svg = containerEl.querySelector("svg");
-                if (!svg) return;
-
+            _setSvgDimensions(containerEl, svg, width, height) {
                 const viewBox = `0 0 ${width} ${height}`;
                 svg.setAttribute("viewBox", viewBox);
                 svg.setAttribute("preserveAspectRatio", "none");
@@ -189,25 +192,55 @@
                 containerEl.style.height = `${height}px`;
                 containerEl.style.transform = "scale(1)";
                 applyTransition(containerEl, ["width", "height"]);
+            }
+
+            _morphPath(pathEl, oldD, newD, options = {}) {
+                const {
+                    duration = 0.6,
+                    easing = "ease-in-out",
+                    maxSegmentLength = 2
+                } = options;
+
+                try {
+                    const interpolator = window.interpolate(oldD, newD, { maxSegmentLength });
+                    window.animate(pathEl, { d: interpolator }, { duration, easing });
+                } catch (e) {
+                    console.warn("ERROR: morphing failed, fallback to skip animation");
+                    console.error(e);
+                    pathEl.setAttribute("d", newD);
+                }
+            }
+
+            resizeSvgContainer(containerEl, width, height, radius) {
+                if (!containerEl) return;
+                const svg = containerEl.querySelector("svg");
+                if (!svg) return;
+
+                this._setSvgDimensions(containerEl, svg, width, height);
 
                 const newD = this._generateNewD(width, height, radius);
 
-                const maskPath = svg.querySelector("defs mask path");
-                if (maskPath) maskPath.setAttribute("d", newD);
+                const selectors = [
+                    "defs mask path",
+                    "defs clipPath path",
+                    "path[mask]",
+                    "path[clip-path]"
+                ];
 
-                const clipPath = svg.querySelector("defs clipPath path");
-                if (clipPath) clipPath.setAttribute("d", newD);
+                for (const selector of selectors) {
+                    const path = svg.querySelector(selector);
+                    if (!path) continue;
 
-                const maskedPath = svg.querySelector("path[mask]");
-                if (maskPath) maskedPath.setAttribute("d", newD);
+                    const oldD = path.getAttribute("d");
+                    if (!oldD || oldD === newD) continue;
 
-                const clippedPath = svg.querySelector("path[clip-path]");
-                if (clippedPath) clippedPath.setAttribute("d", newD);
+                    this._morphPath(path, oldD, newD);
+                }
             }
 
             resetTransform(el) {
                 if (!el) return;
-                applyTransition(el, "transform"); 
+                applyTransition(el, "transform");
                 el.style.transform = "translate(0, 0)";
             }
 
