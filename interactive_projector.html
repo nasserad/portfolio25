@@ -68,6 +68,17 @@
         }
 
         //util functions
+        function throttle(func, delay) {
+            let lastCall = 0;
+            return (...args) => {
+                const now = Date.now();
+                if (now - lastCall >= delay) {
+                    lastCall = now;
+                    func(...args);
+                }
+            };
+        }
+
         function hideElement(el, status) {
             if (!el) return;
             el.style.transition = "transform 1.0s ease";
@@ -198,12 +209,19 @@
                 const {
                     duration = 0.6,
                     easing = "ease-in-out",
-                    maxSegmentLength = 2
+                    maxSegmentLength = 0.5
                 } = options;
 
                 try {
-                    const interpolator = window.interpolate(oldD, newD, { maxSegmentLength });
-                    window.animate(pathEl, { d: interpolator }, { duration, easing });
+                    const mixPaths = window.interpolate(oldD, newD, { maxSegmentLength });
+
+                    window.animate(0, 1, {
+                        duration,
+                        easing,
+                        onUpdate: (progress) => {
+                            pathEl.setAttribute("d", mixPaths(progress));
+                        }
+                    });
                 } catch (e) {
                     console.warn("ERROR: morphing failed, fallback to skip animation");
                     console.error(e);
@@ -220,22 +238,22 @@
 
                 const newD = this._generateNewD(width, height, radius);
 
-                const selectors = [
-                    "defs mask path",
-                    "defs clipPath path",
-                    "path[mask]",
-                    "path[clip-path]"
-                ];
+                const maskPath = svg.querySelector("defs mask path");
+                if (maskPath) maskPath.setAttribute("d", newD);
+                const oldD = path.getAttribute("d");
+                if (oldD && oldD !== newD) this._morphPath(path, oldD, newD);
 
-                for (const selector of selectors) {
-                    const path = svg.querySelector(selector);
-                    if (!path) continue;
+                const clipPath = svg.querySelector("defs clipPath path");
+                if (clipPath) clipPath.setAttribute("d", newD);
+                oldD = path.getAttribute("d");
+                if (oldD && oldD !== newD) this._morphPath(path, oldD, newD);
 
-                    const oldD = path.getAttribute("d");
-                    if (!oldD || oldD === newD) continue;
+                const maskedPath = svg.querySelector("path[mask]");
+                if (maskPath) maskedPath.setAttribute("d", newD);
 
-                    this._morphPath(path, oldD, newD);
-                }
+                const clippedPath = svg.querySelector("path[clip-path]");
+                if (clippedPath) clippedPath.setAttribute("d", newD);
+
             }
 
             resetTransform(el) {
@@ -605,9 +623,7 @@
         const designAssets = rawData.map(createDesignAssetFromData);
 
         //listener (optimize??)
-        $(document).on('mousemove touchmove', function () {
-            callOnce();
-        });
+        $(document).on('mousemove touchmove', throttle(callOnce, 120));
         //initial call (upon page load)
         callOnce();
     </script>
