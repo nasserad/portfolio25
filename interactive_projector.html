@@ -51,40 +51,49 @@
         }
 
         let wasOverlapping = false;
-        let fgBox = null;
+        let interactionCooldown = false;
 
         function callOnce() {
+            if (interactionCooldown) return;
+
             const projector = new Projector();
             const el = projector.elements;
+
             const manager = new DesignAssetManager();
             const activeAsset = manager.getCurrentTarget();
 
-            const isCurrentlyOverlapping = activeAsset && isOverlapping(activeAsset.assetEl, fgBox || el.foreground);
+            const isCurrentlyOverlapping = activeAsset && isOverlapping(activeAsset.assetEl, el.foreground);
 
             if (isCurrentlyOverlapping !== wasOverlapping) {
+                interactionCooldown = true; // prevent overlap checking
+
                 if (isCurrentlyOverlapping) {
-                    fgBox = el.foreground.getBoundingClientRect(); // freeze at start
                     activeAsset.activate();
                 } else if (activeAsset) {
                     activeAsset.deactivate();
-                    fgBox = el.foreground.getBoundingClientRect(); // re-freeze after deactivation
                 }
+
                 wasOverlapping = isCurrentlyOverlapping;
+
+                //reset cooldown
+                setTimeout(() => {
+                    interactionCooldown = false;
+                }, 300);
             }
         }
 
 
         //util functions
-        // function throttle(func, delay) {
-        //     let lastCall = 0;
-        //     return (...args) => {
-        //         const now = Date.now();
-        //         if (now - lastCall >= delay) {
-        //             lastCall = now;
-        //             func(...args);
-        //         }
-        //     };
-        // }
+        function throttle(func, delay) {
+            let lastCall = 0;
+            return (...args) => {
+                const now = Date.now();
+                if (now - lastCall >= delay) {
+                    lastCall = now;
+                    func(...args);
+                }
+            };
+        }
 
         function hideElement(el, status) {
             if (!el) return;
@@ -628,8 +637,9 @@
         const designAssets = rawData.map(createDesignAssetFromData);
 
         //listener (optimize??)
-        document.addEventListener("mousemove", callOnce);
-        document.addEventListener("touchmove", callOnce);
+        const throttledCallOnce = throttle(callOnce, 100);
+        document.addEventListener("mousemove", throttledCallOnce);
+        document.addEventListener("touchmove", throttledCallOnce);
 
         //initial call (upon page load)
         callOnce();
