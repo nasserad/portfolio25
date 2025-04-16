@@ -239,21 +239,18 @@
                 const newD = this._generateNewD(width, height, radius);
 
                 const maskPath = svg.querySelector("defs mask path");
-                if (maskPath) maskPath.setAttribute("d", newD);
-                const oldD = path.getAttribute("d");
-                if (oldD && oldD !== newD) this._morphPath(path, oldD, newD);
+                const oldD = maskPath.getAttribute("d");
+                if (oldD && oldD !== newD) this._morphPath(maskPath, oldD, newD);
 
                 const clipPath = svg.querySelector("defs clipPath path");
-                if (clipPath) clipPath.setAttribute("d", newD);
-                oldD = path.getAttribute("d");
-                if (oldD && oldD !== newD) this._morphPath(path, oldD, newD);
+                oldD = clipPath.getAttribute("d");
+                if (oldD && oldD !== newD) this._morphPath(clipPath, oldD, newD);
 
                 const maskedPath = svg.querySelector("path[mask]");
                 if (maskPath) maskedPath.setAttribute("d", newD);
 
                 const clippedPath = svg.querySelector("path[clip-path]");
                 if (clippedPath) clippedPath.setAttribute("d", newD);
-
             }
 
             resetTransform(el) {
