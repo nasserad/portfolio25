@@ -209,19 +209,12 @@
                 const {
                     duration = 0.6,
                     easing = "ease-in-out",
-                    maxSegmentLength = 0.5
+                    maxSegmentLength = 2
                 } = options;
 
                 try {
-                    const mixPaths = window.interpolate(oldD, newD, { maxSegmentLength });
-
-                    window.animate(0, 1, {
-                        duration,
-                        easing,
-                        onUpdate: (progress) => {
-                            pathEl.setAttribute("d", mixPaths(progress));
-                        }
-                    });
+                    const interpolator = window.interpolate(oldD, newD, { maxSegmentLength });
+                    window.animate(pathEl, { d: interpolator }, { duration, easing });
                 } catch (e) {
                     console.warn("ERROR: morphing failed, fallback to skip animation");
                     console.error(e);
@@ -238,19 +231,22 @@
 
                 const newD = this._generateNewD(width, height, radius);
 
-                const maskPath = svg.querySelector("defs mask path");
-                const maskPathOldD = maskPath.getAttribute("d");
-                if (maskPathOldD && maskPathOldD !== newD) this._morphPath(maskPath, maskPathOldD, newD);
+                const selectors = [
+                    "defs mask path",
+                    "defs clipPath path",
+                    "path[mask]",
+                    "path[clip-path]"
+                ];
 
-                const clipPath = svg.querySelector("defs clipPath path");
-                const clipPathOldD = clipPath.getAttribute("d");
-                if (clipPathOldD && clipPathOldD !== newD) this._morphPath(clipPath, clipPathOldD, newD);
+                for (const selector of selectors) {
+                    const path = svg.querySelector(selector);
+                    if (!path) continue;
 
-                const maskedPath = svg.querySelector("path[mask]");
-                if (maskPath) maskedPath.setAttribute("d", newD);
+                    const oldD = path.getAttribute("d");
+                    if (!oldD || oldD === newD) continue;
 
-                const clippedPath = svg.querySelector("path[clip-path]");
-                if (clippedPath) clippedPath.setAttribute("d", newD);
+                    this._morphPath(path, oldD, newD);
+                }
             }
 
             resetTransform(el) {
