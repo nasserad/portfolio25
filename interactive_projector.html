@@ -11,9 +11,8 @@
     <script>
 
         //[*] stuff left to work on:
-        // DONE: creation of the actual design assets. 
-        // DONE: adding the creation of (the picture/slideshow/video assets to show/hide when design asset activated) to be included within the code.
-        // 3. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
+        // 1. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
+        // 2. storyMedia missing additional randTime text under userName (missing from og design).
 
         //{*} extra stuff:
         // -  way too many calls happening (either proof with w/ a callonce flag check function (cheap soln i feel) or optimize listeners to be smarter.)
@@ -28,12 +27,8 @@
         }
 
         function isOverlapping(elementOrRect1, elementOrRect2) {
-            const rect1 = elementOrRect1 instanceof Element
-                ? elementOrRect1.getBoundingClientRect()
-                : elementOrRect1;
-            const rect2 = elementOrRect2 instanceof Element
-                ? elementOrRect2.getBoundingClientRect()
-                : elementOrRect2;
+            const rect1 = elementOrRect1.getBoundingClientRect();
+            const rect2 = elementOrRect2.getBoundingClientRect();
 
             return !(
                 rect1.right < rect2.left ||    //rectONE is completely to the left of rectTWO
@@ -44,8 +39,7 @@
         }
 
         let wasOverlapping = false;
-        let fgBox = null;
-
+        let interactionCooldown = false;
         function callOnce() {
             if (interactionCooldown) return;
 
@@ -186,6 +180,26 @@
                 return document.querySelector(`div.${this.rmWidgetsClassNames.default}.${this.rmWidgetsClassNames.button}[data-id="${id}"]`);
             }
 
+            //methods
+            setOrigin(x, y) {
+                this.originX = x;
+                this.originY = y;
+            }
+
+            applyTransform(el, offsetX = 0, offsetY = 0) {
+                if (!el) return;
+                const x = this.originX + offsetX;
+                const y = this.originY + offsetY;
+                el.style.transform = `translate(${x}px, ${y}px)`;
+                applyTransition(el, "transform");
+            }
+
+            resetTransform(el) {
+                if (!el) return;
+                applyTransition(el, "transform");
+                el.style.transform = "translate(0, 0)";
+            }
+            
             _generateNewD(width, height, radius) {
                 const r = radius;
                 const w = width;
@@ -202,20 +216,6 @@
                 A${r} ${r} 0 0 0 ${w - r} 0
                 Z
             `.replace(/\s+/g, ' ').trim();
-            }
-
-            //methods
-            setOrigin(x, y) {
-                this.originX = x;
-                this.originY = y;
-            }
-
-            applyTransform(el, offsetX = 0, offsetY = 0) {
-                if (!el) return;
-                const x = this.originX + offsetX;
-                const y = this.originY + offsetY;
-                el.style.transform = `translate(${x}px, ${y}px)`;
-                applyTransition(el, "transform");
             }
 
             resizeSvgContainer(containerEl, width, height, radius) {
@@ -249,12 +249,6 @@
 
                 const clippedPath = svg.querySelector("path[clip-path]");
                 if (clippedPath) clippedPath.setAttribute("d", newD);
-            }
-
-            resetTransform(el) {
-                if (!el) return;
-                applyTransition(el, "transform");
-                el.style.transform = "translate(0, 0)";
             }
 
             setText(textEl, newText) {
@@ -347,56 +341,44 @@
             }
 
             activate() {
-                console.log(`ACTIVATING ${this.id} attempting to get projector singleton`);
+                console.log(`ACTIVATING ${this.id}.`);
                 //get (or create) the projector obj
                 const projector = new Projector();
-                console.log(`ACTIVATING ${this.id} projector successfully created, moving to create el alias`);
                 //alias (for readability)
                 const el = projector.elements;
-                console.log(`ACTIVATING ${this.id} alias successfully created, moving to call setState`);
 
                 //switches the projector to appear on (visual effect)
                 projector.setProjectorState(true, this.isActionable);
-                console.log(`ACTIVATING ${this.id} settedState, moving to call mediafactory`);
                 //sets the projector size and positioning based on the mediaType (of the designAsset)
                 const media = MediaFactory(this.mediaType);
-                console.log(`ACTIVATING ${this.id} called mediafactory, moving to call activate`);
                 media.activate();
-                console.log(`ACTIVATING ${this.id} called activate, moving to call hideElement`);
 
                 //fills in the projector with the design asset (visual effect)
                 hideElement(this.pictureEl, false, true);
-                console.log(`ACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
                 //sets the text based on the designAsset
                 projector.setText(el.title, this.title);
                 projector.setText(el.text, this.text);
-                console.log(`ACTIVATING ${this.id} changed text and titles successfully, returning.`);
+                console.log(`ACTIVATING ${this.id}, returning.`);
             }
 
             deactivate() {
-                console.log(`DEACTIVATING ${this.id} attempting to get projector singleton`);
+                console.log(`DEACTIVATING ${this.id}.`);
                 const projector = new Projector();
-                console.log(`DEACTIVATING ${this.id} projector successfully created, moving to create el alias`);
                 const el = projector.elements;
 
-                console.log(`DEACTIVATING ${this.id} alias successfully created, moving to call setState`);
                 projector.setProjectorState(false, false);
-                console.log(`DEACTIVATING ${this.id} settedState, moving to call mediafactory`);
 
                 const media = MediaFactory(this.mediaType);
-                console.log(`DEACTIVATING ${this.id} called mediafactory, moving to call deactivate`);
                 media.deactivate();
-                console.log(`DEACTIVATING ${this.id} called deactivate, moving to call hideElement`);
 
                 hideElement(this.pictureEl, true, false); //change (need to add delay to movement??)
-                console.log(`DEACTIVATING ${this.id} called hideElement, moving to change text and titles`);
 
                 const defaultTitle = "abra cada bra";
                 const defaultText = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
                 projector.setText(el.title, defaultTitle);
                 projector.setText(el.text, defaultText);
-                console.log(`DEACTIVATING ${this.id} changed text and titles successfully, returning.`);
+                console.log(`DEACTIVATING ${this.id}, returning.`);
             }
         }
 
@@ -469,9 +451,6 @@
 
                 //position actionBtn
                 projector.applyTransform(el.actionBtn, -55, 16.17);
-
-                //position actionBtnDisabled
-                //projector.applyTransform(el.actionBtnDisabled, -55, 16.17);
             }
             deactivate() {
                 const projector = new Projector();
@@ -485,7 +464,6 @@
                 projector.resetTransform(el.userName);
                 projector.resetTransform(el.closeBtn);
                 projector.resetTransform(el.actionBtn);
-                //projector.resetTransform(el.actionBtnDisabled);
 
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);
@@ -528,7 +506,6 @@
                 projector.applyTransform(el.userName, -63.99, 0);
                 projector.applyTransform(el.closeBtn, 156, 0);
                 projector.applyTransform(el.actionBtn, 156, 0);
-                //projector.applyTransform(el.actionBtnDisabled, 156, 0);
             }
             deactivate() {
                 const projector = new Projector();
@@ -542,7 +519,6 @@
                 projector.resetTransform(el.userName);
                 projector.resetTransform(el.closeBtn);
                 projector.resetTransform(el.actionBtn);
-                //projector.resetTransform(el.actionBtnDisabled);
 
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);
@@ -618,9 +594,9 @@
         const designAssets = rawData.map(createDesignAssetFromData);
 
         //listener (optimize??)
-        $(document).on('mousemove touchmove', function () {
-            callOnce();
-        });
+        document.addEventListener("mousemove", callOnce);
+        document.addEventListener("touchmove", callOnce);
+
         //initial call (upon page load)
         callOnce();
     </script>
