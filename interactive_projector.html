@@ -82,6 +82,7 @@
             }
         }
 
+
         //util functions
         function throttle(func, delay) {
             let lastCall = 0;
@@ -107,68 +108,6 @@
             const transitionString = bananaList.map(banana => `${banana} ${duration} ${easing}`).join(", ");
 
             el.style.transition = transitionString;
-        }
-
-        _interpolatorCache = new Map();
-        function getInterpolator(oldD, newD, maxSegmentLength) {
-            const key = oldD + ' ' + newD + ' ' + maxSegmentLength;
-            if (!_interpolatorCache.has(key)) {
-                _interpolatorCache.set(
-                    key,
-                    window.interpolate(oldD, newD, { maxSegmentLength })
-                );
-            }
-            return _interpolatorCache.get(key);
-        }
-
-        /**
-         * Batch‑morph a set of <path> elements from their current `d`→ newD.
-         * Extensive debug logging to pinpoint failures.
-         */
-        function morphAll(paths, newD, { duration = 0.6, easing = 'ease-in-out', maxSegmentLength = 2 } = {}) {
-            console.log('   7. Enter morphAll() {totalPaths:', paths.length, 'newD:', newD, '}');
-
-            const items = paths
-                .map(el => {
-                    const oldD = el.getAttribute('d');
-                    if (!oldD || oldD === newD) {
-                        console.log('       skip path (no oldD or already new)');
-                        return null;
-                    }
-                    try {
-                        const interp = getInterpolator(oldD, newD, maxSegmentLength);
-                        console.log('       ✓ interp created for element:', el);
-                        return { el, interp };
-                    } catch (err) {
-                        console.warn('       flubber failed, fallback to instant', err);
-                        el.setAttribute('d', newD);
-                        return null;
-                    }
-                })
-                .filter(Boolean);
-
-            console.log('   8. items to animate:', items.length, items);
-
-            if (items.length === 0) {
-                console.log('   9. No paths to animate');
-                return;
-            }
-
-            // proxy object for the tween
-            const proxy = { t: 0 };
-            console.log('  10. starting Motion animate on proxy');
-
-            // animate proxy.t from 0 → 1
-            animate(proxy, { t: 1 }, {
-                duration,
-                easing,
-                onUpdate: ({ t }) => {
-                    for (const { el, interp } of items) {
-                        el.setAttribute('d', interp(t));
-                    }
-                },
-                onComplete: () => console.log('   11. morphAll() complete')
-            });
         }
 
         class Projector {
@@ -211,25 +150,9 @@
                     actionBtn: this._queryButton(this.ids.actionBtn)
                 };
 
-                const bgSvg = this.elements.background.querySelector('svg');
-                const fgSvg = this.elements.foreground.querySelector('svg');
-
-                // cache background-only paths
-                this._bgMorphPaths = Array.from(
-                    bgSvg.querySelectorAll(
-                        'defs mask path, defs clipPath path, path[mask], path[clip-path]'
-                    )
-                );
-
-                // cache foreground-only paths
-                this._fgMorphPaths = Array.from(
-                    fgSvg.querySelectorAll(
-                        'defs mask path, defs clipPath path, path[mask], path[clip-path]'
-                    )
-                );
-
                 this.originX = 0;
                 this.originY = 0;
+
                 Projector.instance = this;
             }
 
@@ -293,26 +216,72 @@
                 //applyTransition(containerEl, ["width", "height"]);
             }
 
-            resizeProjectorShapes({ backgroundSize, foregroundSize, radius = 15 }) {
-                const el = this.elements;
-                const [bgW, bgH] = backgroundSize;
-                const [fgW, fgH] = foregroundSize;
+            _morphPath(pathEl, oldD, newD, options = {}) {
+                const {
+                    duration = 600, // in ms
+                    maxSegmentLength = 2
+                } = options;
 
-                // resize the SVG containers (no change here)
-                this._setSvgDimensions(el.background, el.background.querySelector('svg'), bgW, bgH);
-                this._setSvgDimensions(el.foreground, el.foreground.querySelector('svg'), fgW, fgH);
+                try {
+                    const interpolator = interpolate(oldD, newD, { maxSegmentLength });
 
-                // generate “d” for each
-                const bgD = this._generateNewD(bgW, bgH, radius);
-                const fgD = this._generateNewD(fgW, fgH, radius);
+                    const start = performance.now();
 
-                // morph background paths to bgD
-                console.log('   morphing background →', bgD);
-                morphAll(this._bgMorphPaths, bgD, { duration: 0.6, easing: 'ease-in-out' });
+                    function tick(now) {
+                        const elapsed = now - start;
+                        const progress = Math.min(elapsed / duration, 1);
 
-                // morph foreground paths to fgD
-                console.log('   morphing foreground →', fgD);
-                morphAll(this._fgMorphPaths, fgD, { duration: 0.6, easing: 'ease-in-out' });
+                        const currentD = interpolator(progress);
+                        pathEl.setAttribute("d", currentD);
+
+                        if (progress < 1) {
+                            requestAnimationFrame(tick);
+                        }
+                    }
+
+                    requestAnimationFrame(tick);
+                } catch (e) {
+                    console.warn("ERROR: morphing failed, fallback to skip animation");
+                    console.error(e);
+                    pathEl.setAttribute("d", newD);
+                }
+            }
+
+            resizeSvgContainer(containerEl, width, height, radius) {
+                console.log(`   1. Entered reSizeSvg(), attempting to get containerEl.`);
+                if (!containerEl) return;
+                console.log(`   2. Got containerEl successfully, attempting to query svg tag within.`);
+                const svg = containerEl.querySelector("svg");
+                if (!svg) return;
+                console.log(`   3. Got svg successfully, calling setSvgDimensions.`);
+
+                this._setSvgDimensions(containerEl, svg, width, height);
+
+                console.log(`   4. Setted dimensions successfully successfully, calling generating newD path.`);
+                const newD = this._generateNewD(width, height, radius);
+                console.log(`   5. Generated newD path successfully, creating selectors array.`);
+
+                const selectors = [
+                    "defs mask path",
+                    "defs clipPath path",
+                    "path[mask]",
+                    "path[clip-path]"
+                ];
+                console.log(`   6. Created array successfully, entering loop.`);
+
+                for (const selector of selectors) {
+                    console.log(`       1# Entered [${selector}], querying path.`);
+                    const path = svg.querySelector(selector);
+                    if (!path) continue;
+                    console.log(`       2# Queried path successfully, getting oldD.`);
+
+                    const oldD = path.getAttribute("d");
+                    if (!oldD || oldD === newD) continue;
+                    console.log(`       3# Got oldD successfully, calling morphPath().`);
+
+                    this._morphPath(path, oldD, newD);
+                    console.log(`       4# Called morphPath successfully, ${selector} is complete.`);
+                }
             }
 
             resetTransform(el) {
@@ -497,11 +466,8 @@
                 projector.applyTransform(el.text, 0, 0);
 
                 //PROJECTOR: resize 
-                projector.resizeProjectorShapes({
-                    backgroundSize: [195, 383],
-                    foregroundSize: [177, 314],
-                    radius: 15
-                });
+                projector.resizeSvgContainer(el.background, 195, 383, 15);
+                projector.resizeSvgContainer(el.foreground, 177, 314, 15);
 
                 //PROJECTOR: hide
                 hideElement(el.hintText, true);
@@ -542,11 +508,8 @@
                 projector.resetTransform(el.actionBtn);
                 //projector.resetTransform(el.actionBtnDisabled);
 
-                projector.resizeProjectorShapes({
-                    backgroundSize: [298, 355],
-                    foregroundSize: [281, 281],
-                    radius: 15
-                });
+                projector.resizeSvgContainer(el.background, 298, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
                 hideElement(el.hintText, false);
             }
@@ -573,11 +536,8 @@
                 // projector.applyTransform(el.text, 62, 0);
 
                 //PROJECTOR: resize 
-                projector.resizeProjectorShapes({
-                    backgroundSize: [517, 355],  // video bg
-                    foregroundSize: [499, 281],  // video fg
-                    radius: 15
-                });
+                projector.resizeSvgContainer(el.background, 517, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 499, 281, 15);
 
                 //PROJECTOR: hide
                 // hideElement(el.hintText, true);
@@ -603,11 +563,8 @@
                 // projector.resetTransform(el.closeBtn);
                 // projector.resetTransform(el.actionBtn);
 
-                projector.resizeProjectorShapes({
-                    backgroundSize: [298, 355],
-                    foregroundSize: [281, 281],
-                    radius: 15
-                });
+                projector.resizeSvgContainer(el.background, 298, 355, 15);
+                projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
                 // hideElement(el.hintText, false);
             }
