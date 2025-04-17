@@ -109,9 +109,9 @@
             el.style.transition = transitionString;
         }
 
-        const _interpolatorCache = new Map();
+        _interpolatorCache = new Map();
         function getInterpolator(oldD, newD, maxSegmentLength) {
-            const key = oldD + '🔗' + newD + '🔗' + maxSegmentLength;
+            const key = oldD + ' ' + newD + ' ' + maxSegmentLength;
             if (!_interpolatorCache.has(key)) {
                 _interpolatorCache.set(
                     key,
@@ -121,8 +121,13 @@
             return _interpolatorCache.get(key);
         }
 
+        /**
+         * Batch‑morph a set of <path> elements from their current `d`→ newD.
+         * Extensive debug logging to pinpoint failures.
+         */
         function morphAll(paths, newD, { duration = 0.6, easing = 'ease-in-out', maxSegmentLength = 2 } = {}) {
-            console.log('   7. Enter morphAll(), batching', paths.length, 'paths');
+            console.log('   7. Enter morphAll() {totalPaths:', paths.length, 'newD:', newD, '}');
+
             const items = paths
                 .map(el => {
                     const oldD = el.getAttribute('d');
@@ -132,6 +137,7 @@
                     }
                     try {
                         const interp = getInterpolator(oldD, newD, maxSegmentLength);
+                        console.log('       ✓ interp created for element:', el);
                         return { el, interp };
                     } catch (err) {
                         console.warn('       flubber failed, fallback to instant', err);
@@ -141,20 +147,27 @@
                 })
                 .filter(Boolean);
 
+            console.log('   8. items to animate:', items.length, items);
+
             if (items.length === 0) {
-                console.log('   8. No paths to animate');
+                console.log('   9. No paths to animate');
                 return;
             }
 
-            window.animate(0, 1, {
+            // proxy object for the tween
+            const proxy = { t: 0 };
+            console.log('  10. starting Motion animate on proxy');
+
+            // animate proxy.t from 0 → 1
+            animate(proxy, { t: 1 }, {
                 duration,
                 easing,
-                onUpdate: t => {
+                onUpdate: ({ t }) => {
                     for (const { el, interp } of items) {
                         el.setAttribute('d', interp(t));
                     }
                 },
-                onComplete: () => console.log('   9. morphAll() complete')
+                onComplete: () => console.log('   11. morphAll() complete')
             });
         }
 
@@ -201,10 +214,19 @@
                 const bgSvg = this.elements.background.querySelector('svg');
                 const fgSvg = this.elements.foreground.querySelector('svg');
 
-                this._morphPaths = [
-                    ...Array.from(bgSvg.querySelectorAll('defs mask path, defs clipPath path, path[mask], path[clip-path]')),
-                    ...Array.from(fgSvg.querySelectorAll('defs mask path, defs clipPath path, path[mask], path[clip-path]'))
-                ];
+                // cache background-only paths
+                this._bgMorphPaths = Array.from(
+                    bgSvg.querySelectorAll(
+                        'defs mask path, defs clipPath path, path[mask], path[clip-path]'
+                    )
+                );
+
+                // cache foreground-only paths
+                this._fgMorphPaths = Array.from(
+                    fgSvg.querySelectorAll(
+                        'defs mask path, defs clipPath path, path[mask], path[clip-path]'
+                    )
+                );
 
                 this.originX = 0;
                 this.originY = 0;
@@ -273,23 +295,24 @@
 
             resizeProjectorShapes({ backgroundSize, foregroundSize, radius = 15 }) {
                 const el = this.elements;
-                console.log('   1. Enter resizeProjectorShapes()');
-
                 const [bgW, bgH] = backgroundSize;
                 const [fgW, fgH] = foregroundSize;
 
-                // 2. Resize containers
-                console.log('   2. Resizing background & foreground containers');
+                // resize the SVG containers (no change here)
                 this._setSvgDimensions(el.background, el.background.querySelector('svg'), bgW, bgH);
                 this._setSvgDimensions(el.foreground, el.foreground.querySelector('svg'), fgW, fgH);
 
-                // 3. Generate newD from fg dimensions
-                console.log('   3. Generating newD');
-                const newD = this._generateNewD(fgW, fgH, radius);
+                // generate “d” for each
+                const bgD = this._generateNewD(bgW, bgH, radius);
+                const fgD = this._generateNewD(fgW, fgH, radius);
 
-                // 4. Batch‑morph all cached paths
-                console.log('   4. Batch‑morph all paths');
-                morphAll(this._morphPaths, newD, { duration: 0.6 });
+                // morph background paths to bgD
+                console.log('   morphing background →', bgD);
+                morphAll(this._bgMorphPaths, bgD, { duration: 0.6, easing: 'ease-in-out' });
+
+                // morph foreground paths to fgD
+                console.log('   morphing foreground →', fgD);
+                morphAll(this._fgMorphPaths, fgD, { duration: 0.6, easing: 'ease-in-out' });
             }
 
             resetTransform(el) {
