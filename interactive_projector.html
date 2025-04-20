@@ -11,9 +11,9 @@
     <script>
 
         //[*] stuff left to work on:
-        // 1. adding logic to the buttons.
+        // DONE. adding logic to the buttons.
         // 2. storyMedia missing additional randTime text under userName (missing from og design).
-        // 3. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
+        // DONE. adding the tweaks. refactoring the code (if needed). need an overloaded hide/show function version for the tweaks array (maybe embed a sequential animation within it).
         // 4. special view for when more than one El is showing.
 
         //{*} extra stuff:
@@ -21,9 +21,14 @@
         // -  optimizing listeners.
         // -  rethink factory + singleton pattern for mediatypes. overkill or keep it?
 
-        function isOverlapping(elementOrRect1, elementOrRect2) {
-            const rect1 = elementOrRect1.getBoundingClientRect();
-            const rect2 = elementOrRect2.getBoundingClientRect();
+        //constants: animations
+        const ANIMATIONS = {
+            OPACITY_FADE: getTransitionString("opacity", "0.6s", "ease", "0.3s")
+        }
+
+        function isOverlapping(element1, element2) {
+            const rect1 = element1.getBoundingClientRect();
+            const rect2 = element2.getBoundingClientRect();
 
             return !(
                 rect1.right < rect2.left ||    //rectONE is completely to the left of rectTWO
@@ -54,12 +59,12 @@
 
                 if (isCurrentlyOverlapping) {
                     //hide el
-                    hideElement(activeAssetEl, true, projector.ANIMATIONS.OPACITY_FADE);
+                    hideElement(activeAssetEl, true, ANIMATIONS.OPACITY_FADE);
 
                     //activate
                     activeAsset.activate();
-                } 
-                
+                }
+
                 // else if (activeAsset) { //deprecated (will clean soon)
                 //     activeAsset.deactivate();
                 // }
@@ -123,6 +128,15 @@
             el.style.transition = transitionString;
         }
 
+        function hideHotspots(ids, shouldHide, transitionString) {
+            if (!Array.isArray(ids)) return;
+
+            ids.forEach(id => {
+                const hotspotEl = document.querySelector(`div[data-id="${id}"]`);
+                if (hotspotEl) hideElement(hotspotEl, shouldHide, transitionString);
+            });
+        }
+
         class Projector {
             constructor() {
                 if (Projector.instance) return Projector.instance;
@@ -161,16 +175,16 @@
                     actionBtn: this._queryElement(this.IDS.actionBtn)
                 };
 
-                //constants: animations
-                this.ANIMATIONS = {
-                    OPACITY_FADE: getTransitionString("opacity", "0.6s", "ease", "0.3s")
-                }
-
                 this.projectorOriginX = 0;
                 this.projectorOriginY = 0;
 
                 if (this.elements.closeBtn) {
                     this.elements.closeBtn.addEventListener("click", () => this.resetProjector());
+                }
+
+                this.shouldHotspotsHide = true; 
+                if (this.elements.actionBtn) {
+                    this.elements.actionBtn.addEventListener("click", () => this.hideHotspotsForActiveEl(!this.shouldHotspotsHide));
                 }
 
                 Projector.instance = this;
@@ -322,11 +336,22 @@
                 if (!activeAssetEl) return;
 
                 this.applyTransform(activeAssetEl, activeAssetEl.assetOriginX, activeAssetEl.assetOriginY);
-                hideElement(activeAssetEl, false, this.ANIMATIONS.OPACITY_FADE);
+                hideElement(activeAssetEl, false, ANIMATIONS.OPACITY_FADE);
                 //this.setTransform(activeAssetEl, activeAssetEl.assetOriginX, activeAssetEl.assetOriginY); //check can we edit left top after el no longer in flow (display set to none).
 
                 activeAsset.deactivate();
                 manager.clearTarget();
+            }
+
+            hideHotspotsForActiveEl(shouldHide) {
+                const manager = new DesignAssetManager();
+                const activeAsset = manager.getCurrentTarget();
+                if (!activeAsset) return;
+                const activeHotspotsIds = activeAsset.hotspotsDataIds;
+
+                hideHotspots(activeHotspotsIds, shouldHide, ANIMATIONS.OPACITY_FADE);
+                
+                this.shouldHotspotsHide = shouldHide;
             }
         }
 
@@ -337,10 +362,10 @@
             * @param {string} text
             * @param {string} pictureDataId
             * @param {bool} isActionable
-            * @param {string[]} tweakDataId
+            * @param {string[]} hotspotsDataIds
             * @param {MediaType} mediaType
             */
-            constructor(id, originX, originY, title, text, pictureDataId, isActionable, tweakDataId, mediaType) {
+            constructor(id, originX, originY, title, text, pictureDataId, isActionable, hotspotsDataIds, mediaType) {
                 this.id = id;
                 this.assetOriginX = originX;
                 this.assetOriginY = originY;
@@ -348,13 +373,14 @@
                 this.text = text;
                 this.pictureDataId = pictureDataId;
                 this.isActionable = isActionable;
-                this.tweakDataId = tweakDataId; //unused
+                this.hotspotsDataIds = hotspotsDataIds; //unused
                 this.mediaType = mediaType;
 
                 this.assetEl = document.querySelector(`div[data-id="${id}"]`);
                 this.pictureEl = document.querySelector(`div[data-id="${this.pictureDataId}"]`);
                 this._bindEvents();
                 this._hidePictureOnInit();
+                this._hideHotspotsOnInit();
             }
 
             _bindEvents() {
@@ -367,7 +393,11 @@
             }
 
             _hidePictureOnInit() {
-                hideElement(this.pictureEl, true, false);
+                hideElement(this.pictureEl, true);
+            }
+
+            _hideHotspotsOnInit() {
+                hideHotspots(this.hotspotsDataIds, true);
             }
 
             activate() {
@@ -384,7 +414,7 @@
                 media.activate();
 
                 //fills in the projector with the design asset (visual effect)
-                hideElement(this.pictureEl, false, projector.ANIMATIONS.OPACITY_FADE);
+                hideElement(this.pictureEl, false, ANIMATIONS.OPACITY_FADE);
 
                 //sets the text based on the designAsset
                 projector.setText(el.title, this.title);
@@ -402,7 +432,7 @@
                 const media = MediaFactory(this.mediaType);
                 media.deactivate();
 
-                hideElement(this.pictureEl, true, false); //change (need to add delay to movement??)
+                hideElement(this.pictureEl, true); //change (need to add delay to movement??)
 
                 const defaultTitle = "abra cada bra";
                 const defaultText = "moooooove something inside the super special magical projector pro plus R/m skibidi fast. COMES WITH..? YOU/ gusessed it ArITFICIAL intelligence.";
@@ -461,7 +491,7 @@
                 projector.resizeSvgContainer(el.foreground, 177, 314, 15);
 
                 //PROJECTOR: hide
-                hideElement(el.hintText, true, false);
+                hideElement(el.hintText, true);
 
                 //PROJECTOR: move
                 //position bg
@@ -498,7 +528,7 @@
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
-                hideElement(el.hintText, false, true);
+                hideElement(el.hintText, false);
             }
         }
 
@@ -527,7 +557,7 @@
                 projector.resizeSvgContainer(el.foreground, 499, 281, 15);
 
                 //PROJECTOR: hide
-                hideElement(el.hintText, true, false);
+                hideElement(el.hintText, true);
 
                 //PROJECTOR: move
                 projector.applyTransform(el.background, -63, 0);
@@ -553,7 +583,7 @@
                 projector.resizeSvgContainer(el.background, 298, 355, 15);
                 projector.resizeSvgContainer(el.foreground, 281, 281, 15);
 
-                hideElement(el.hintText, false, true);
+                hideElement(el.hintText, false);
             }
         }
 
@@ -590,7 +620,7 @@
                 data.text,
                 data.pictureDataId,
                 data.isActionable,
-                data.tweakDataId || [],
+                data.hotspotsDataIds || [],
                 data.mediaType
             );
         }
@@ -604,7 +634,7 @@
                 text: "So, in here announced the Al-Hussein Technical University Coding Competition through a super amazing really cool post. It was amazing and I loved it of course becasue I designed it, I know amazing right?",
                 pictureDataId: "67f95cc570965b325e806672",
                 isActionable: true,
-                tweakDataId: ["tw1", "tw2"],
+                hotspotsDataIds: ["6804fb811fe4efd47f4db8f2", "6804fb8164e4f20b5fc6543e"],
                 mediaType: "post"
             },
             {
